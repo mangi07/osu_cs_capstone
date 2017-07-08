@@ -1,0 +1,28 @@
+{
+	"lumberjacks":[
+		{
+			"state":"attacking",
+			"coords":{"x":100,"y":100},
+			"dest_coords":null,
+			"following":null
+		},
+		{
+			"state":"following",
+			"coords":{"x":75,"y":50},
+			"dest_coords":null,
+			"following":3
+		},
+		{
+			"state":"wood",
+			"coords":{"x":1000,"y":800},
+			"dest_coords":{"x":300,"y":500},
+			"following":null
+		},
+		{
+			"state":"food",
+			"coords":{"x":1000,"y":600},
+			"dest_coords":{"x":200,"y":700},
+			"following":null
+		}
+	]
+}
