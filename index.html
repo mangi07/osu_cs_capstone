@@ -2,26 +2,43 @@
 
 <html lang="en">
 <head>
-	<!-- html template from https://www.sitepoint.com/a-basic-html5-template/ -->
-  <meta charset="utf-8">
+    <meta charset="utf-8">
 
-  <title>OSU CS 496 Team Grus RTS</title>
-  <meta name="description" content="Lumberjacks versus Beavers game">
-  <meta name="author" content="Ben, Steven, Joshua">
+    <title>OSU CS 467 Team Grus RTS Home Page</title>
+    <meta name="description" content="Lumberjacks versus Beavers game">
+    <meta name="author" content="Ben, Steven, Joshua">
 
-  <link rel="stylesheet" href="/css/custom.css">
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/custom.css">
 
-  <!--[if lt IE 9]>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
-  <![endif]-->
-
-  <!--<script src="//cdn.jsdelivr.net/phaser/2.8.1/phaser.min.js"></script>-->
-  <script src="/js/phaser.min.js"></script>
+    <!--[if lt IE 9]>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
+    <![endif]-->
 </head>
 
 <body>
-
-  <script src="/js/game.js"></script>
+    <div class="container">
+        <div class="jumbotron text-center">
+            <h1>Lumberjacks vs Beavers</h1>
+            <h3>An HTML5 Real-Time Strategy Game</h3>
+            <h3>OSU CS 467 Summer 2017 Team Grus Capstone Project</h3>
+        </div>
+        <div class="button text-center" id="newgame">
+            <a class="btn btn-group btn-primary" href="game.html">
+                New Game - Easy Mode
+            </a>
+        </div>
+        <div class="button text-center" id="newgame">
+            <a class="btn btn-group btn-danger" href="game.html">
+                New Game - Hard Mode
+            </a>
+        </div>
+        <div class="button text-center" id="loadgame">
+            <a class="btn btn-group btn-success" href="#">
+                Load Game
+            </a>
+        </div>
+    </div>
 
 </body>
 </html>
