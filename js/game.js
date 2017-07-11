@@ -5,7 +5,7 @@ window.onload = function() {
   var WORLD_WIDTH = 2048;
   var WORLD_HEIGHT = 2048;
   var TILE_LENGTH = 64;
-  var UI_HEIGHT = 200;
+  var UI_HEIGHT = 2 * TILE_LENGTH;
   var mapGroup;
   var uiGroup;
 
@@ -45,23 +45,23 @@ window.onload = function() {
           if (x > CAMERA_WIDTH - 50) {
               game.camera.x += 10;
           }
-          else if (x < 50) {
+          else if (x < 50 && y < CAMERA_HEIGHT - 3 * TILE_LENGTH) {
               game.camera.x -= 10;
           }
           else if (x > CAMERA_WIDTH - 100) {
               game.camera.x += 5;
           }
-          else if (x < 100) {
+          else if (x < 100 && y < CAMERA_HEIGHT - 3 * TILE_LENGTH) {
               game.camera.x -= 5;
           }
          
-          if (y > CAMERA_HEIGHT - 50) {
+          if (y > CAMERA_HEIGHT - 50 && x > 7 * TILE_LENGTH) {
               game.camera.y += 10;
           }
           else if (y < 50) {
               game.camera.y -= 10;
           }
-          else if (y > CAMERA_HEIGHT - 100) {
+          else if (y > CAMERA_HEIGHT - 100 && x > 7 * TILE_LENGTH) {
               game.camera.y += 5;
           }
           else if (y < 100) {
