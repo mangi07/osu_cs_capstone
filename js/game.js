@@ -18,6 +18,10 @@ window.onload = function() {
 
       createGroups();
       loadMap();
+      // TODO: swap with a call like "loadStructures"
+      Structure(game).logGame();
+      console.log(mapGroup);
+      Structures.initStructures(mapGroup);
 
   }
 
@@ -32,6 +36,7 @@ window.onload = function() {
       game.load.image('grass', 'assets/tiles/grass.png');
       game.load.image('tree', 'assets/tiles/tree.png');
       game.load.image('berry', 'assets/tiles/berry.png');
+      game.load.image('sawmill', 'assets/tiles/test_tile.png');
   }
 
   function loadMap () {
