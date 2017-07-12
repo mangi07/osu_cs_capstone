@@ -20,7 +20,7 @@ var GameUtilities = {
 	* 	of more sprites being replaced.  This works well with a number 
 	* 	between 1 and 2, eg: 1.2 or 1.5
 	*
-	* assume each new sprite has same lenght and width as each old sprite
+	* assume each new sprite has same length and width as each old sprite
 	* assume each key exists
 	*
 	* @returns {object} - the tileGroup
