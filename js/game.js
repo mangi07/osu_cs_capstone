@@ -1,35 +1,84 @@
 window.onload = function() {
 
-  var GAME_WIDTH = 1536;
-  var GAME_HEIGHT = 768;
+  var CAMERA_WIDTH = 1024;
+  var CAMERA_HEIGHT = 512;
+  var WORLD_WIDTH = 2048;
+  var WORLD_HEIGHT = 2048;
   var TILE_LENGTH = 64;
+  var UI_HEIGHT = 2 * TILE_LENGTH;
   var mapGroup;
+  var uiGroup;
 
-
-  var game = new Phaser.Game(GAME_WIDTH, GAME_HEIGHT, Phaser.AUTO, '', { preload: preload, create: create });
+  var game = new Phaser.Game(CAMERA_WIDTH, CAMERA_HEIGHT, Phaser.AUTO, '',
+    { preload: preload, create: create, update: update, render: render });
 
   function preload () {
 
       loadMapTiles();
-    
   }
 
   function create () {
 
+      game.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
       createGroups();
       loadMap();
+
       // TODO: swap with a call like "loadStructures"
       Structure(game).logGame();
       console.log(mapGroup);
       Structures.initStructures(mapGroup);
 
+      loadUserInterface();
   }
 
   function update () {
+    updateCameraView();
+  }
+
+  function render() {
+
+    //game.debug.cameraInfo(game.camera, 32, 32);
+    //game.debug.pointer(game.input.mousePointer);
+  }
+
+  function updateCameraView() {
+      var x;
+      var y;
+      if (game.input.activePointer.isUp) {
+          x = game.input.activePointer.position.x;
+          y = game.input.activePointer.position.y;
+
+          if (x > CAMERA_WIDTH - 50) {
+              game.camera.x += 10;
+          }
+          else if (x < 50 && y < CAMERA_HEIGHT - 3 * TILE_LENGTH) {
+              game.camera.x -= 10;
+          }
+          else if (x > CAMERA_WIDTH - 100) {
+              game.camera.x += 5;
+          }
+          else if (x < 100 && y < CAMERA_HEIGHT - 3 * TILE_LENGTH) {
+              game.camera.x -= 5;
+          }
+         
+          if (y > CAMERA_HEIGHT - 50 && x > 7 * TILE_LENGTH) {
+              game.camera.y += 10;
+          }
+          else if (y < 50) {
+              game.camera.y -= 10;
+          }
+          else if (y > CAMERA_HEIGHT - 100 && x > 7 * TILE_LENGTH) {
+              game.camera.y += 5;
+          }
+          else if (y < 100) {
+              game.camera.y -= 5;
+          }
+      } 
   }
 
   function createGroups () {
       mapGroup = game.add.group();
+      uiGroup = game.add.group();
   }
 
   function loadMapTiles () {
@@ -38,56 +87,59 @@ window.onload = function() {
       game.load.image('berry', 'assets/tiles/berry.png');
       game.load.image('sawmill', 'assets/tiles/test_tile.png');
   }
-
+  
   function loadMap () {
-      var grass;
-      var tree;
+      var tile;
       var treeSparsityFactor = 10;
       var resourceSparsityFactor = 3;
       var treeFlag = true;
 
       for (var x = 0; x < game.world.width; x += TILE_LENGTH) {
-          for (var y = 0; y < game.world.height; y += TILE_LENGTH) {
+          for (var y = 0; y < game.world.height - UI_HEIGHT; y += TILE_LENGTH) {
               if (Math.floor(Math.random() * treeSparsityFactor) != 0) {
-                  grass = game.add.sprite(x, y, 'grass');
-                  grass.anchor.setTo(0, 0);
-                  mapGroup.add(grass);
+                  tile = game.add.sprite(x, y, 'grass');
               }
               else {
                   if (x < game.world.width/3 || x > game.world.width*2/3) {
                       if (treeFlag) {
-                          tree = game.add.sprite(x, y, 'tree');
-                          tree.anchor.setTo(0, 0);
-                          mapGroup.add(tree);
+                          tile = game.add.sprite(x, y, 'tree');
                           treeFlag = false;
                       }
                       else {
-                          berry = game.add.sprite(x, y, 'berry');
-                          berry.anchor.setTo(0, 0);
-                          mapGroup.add(berry);
+                          tile = game.add.sprite(x, y, 'berry');
                           treeFlag = true;
                       }
                   }
                   else {
                       if (Math.floor(Math.random() * resourceSparsityFactor) != 0) {
-                          grass = game.add.sprite(x, y, 'grass');
-                          grass.anchor.setTo(0, 0);
-                          mapGroup.add(grass);
+                          tile = game.add.sprite(x, y, 'grass');
                       }
                       else if (Math.floor(Math.random() * 2) != 0) {
-                          tree = game.add.sprite(x, y, 'tree');
-                          tree.anchor.setTo(0, 0);
-                          mapGroup.add(tree);
+                          tile = game.add.sprite(x, y, 'tree');
                       }
                       else {
-                          berry = game.add.sprite(x, y, 'berry');
-                          berry.anchor.setTo(0, 0);
-                          mapGroup.add(berry);
+                          tile = game.add.sprite(x, y, 'berry');
                       }
                   }
               }
+              tile.anchor.setTo(0, 0);
+              mapGroup.add(tile);
+              tile.inputEnabled = true;
+              tile.events.onInputUp.add(function (t) {
+              }, this);
           }
       }
+  }
+
+  function loadUserInterface () {
+      var uiSprite;
+      for (var i = 0; i < 5; i++) {
+          uiSprite = game.add.sprite(i * TILE_LENGTH, 0, 'tree');
+          uiSprite.anchor.setTo(0, 0);
+          uiGroup.add(uiSprite);
+      }
+      uiGroup.fixedToCamera = true;
+      uiGroup.cameraOffset.setTo(25, CAMERA_HEIGHT - TILE_LENGTH - 25);
   }
 
 };
