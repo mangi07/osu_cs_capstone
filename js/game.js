@@ -5,9 +5,12 @@ window.onload = function() {
   var WORLD_WIDTH = 2048;
   var WORLD_HEIGHT = 2048;
   var TILE_LENGTH = 64;
-  var UI_HEIGHT = 2 * TILE_LENGTH;
+  var UI_HEIGHT = 3 * TILE_LENGTH;
   var mapGroup;
   var uiGroup;
+  var uiResourceText;
+  var lumber;
+  var food;
 
   var game = new Phaser.Game(CAMERA_WIDTH, CAMERA_HEIGHT, Phaser.AUTO, '',
     { preload: preload, create: create, update: update, render: render });
@@ -20,6 +23,7 @@ window.onload = function() {
   function create () {
 
       game.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+      initResourceCount();
       createGroups();
       loadMap();
 
@@ -33,6 +37,7 @@ window.onload = function() {
 
   function update () {
     updateCameraView();
+    updateResourceText();
   }
 
   function render() {
@@ -41,39 +46,36 @@ window.onload = function() {
     //game.debug.pointer(game.input.mousePointer);
   }
 
-  function updateCameraView() {
+  function initResourceCount () {
+      lumber = 100;
+      food = 100;
+  }
+
+  function updateCameraView () {
       var x;
       var y;
       if (game.input.activePointer.isUp) {
           x = game.input.activePointer.position.x;
           y = game.input.activePointer.position.y;
 
-          if (x > CAMERA_WIDTH - 50) {
+          if (x > CAMERA_WIDTH - TILE_LENGTH) {
               game.camera.x += 10;
           }
-          else if (x < 50 && y < CAMERA_HEIGHT - 3 * TILE_LENGTH) {
+          else if (x < TILE_LENGTH) {
               game.camera.x -= 10;
           }
-          else if (x > CAMERA_WIDTH - 100) {
-              game.camera.x += 5;
-          }
-          else if (x < 100 && y < CAMERA_HEIGHT - 3 * TILE_LENGTH) {
-              game.camera.x -= 5;
-          }
          
-          if (y > CAMERA_HEIGHT - 50 && x > 7 * TILE_LENGTH) {
+          if (y > CAMERA_HEIGHT - TILE_LENGTH) {
               game.camera.y += 10;
           }
-          else if (y < 50) {
+          else if (y < TILE_LENGTH) {
               game.camera.y -= 10;
           }
-          else if (y > CAMERA_HEIGHT - 100 && x > 7 * TILE_LENGTH) {
-              game.camera.y += 5;
-          }
-          else if (y < 100) {
-              game.camera.y -= 5;
-          }
       } 
+  }
+
+  function updateResourceText () {
+      uiResourceText.setText("Lumber: " + lumber + "   Food: " + food);
   }
 
   function createGroups () {
@@ -95,7 +97,7 @@ window.onload = function() {
       var treeFlag = true;
 
       for (var x = 0; x < game.world.width; x += TILE_LENGTH) {
-          for (var y = 0; y < game.world.height - UI_HEIGHT; y += TILE_LENGTH) {
+          for (var y = TILE_LENGTH/2; y < game.world.height - UI_HEIGHT; y += TILE_LENGTH) {
               if (Math.floor(Math.random() * treeSparsityFactor) != 0) {
                   tile = game.add.sprite(x, y, 'grass');
               }
@@ -133,13 +135,16 @@ window.onload = function() {
 
   function loadUserInterface () {
       var uiSprite;
-      for (var i = 0; i < 5; i++) {
-          uiSprite = game.add.sprite(i * TILE_LENGTH, 0, 'tree');
+      var uiResourceBar;
+      for (var i = 1; i <= 5; i++) {
+          uiSprite = game.add.sprite(i * TILE_LENGTH, CAMERA_HEIGHT - 2 * TILE_LENGTH, 'tree');
           uiSprite.anchor.setTo(0, 0);
           uiGroup.add(uiSprite);
       }
+      uiResourceText = game.add.text(5, 5, "Lumber: " + lumber + "   Food: " + food);
+      uiResourceText.fill = "white";
+      uiResourceText.anchor.setTo(0, 0);
+      uiGroup.add(uiResourceText);
       uiGroup.fixedToCamera = true;
-      uiGroup.cameraOffset.setTo(25, CAMERA_HEIGHT - TILE_LENGTH - 25);
   }
-
 };
