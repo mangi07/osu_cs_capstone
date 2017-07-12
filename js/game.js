@@ -87,7 +87,8 @@ window.onload = function() {
       game.load.image('grass', 'assets/tiles/grass.png');
       game.load.image('tree', 'assets/tiles/tree.png');
       game.load.image('berry', 'assets/tiles/berry.png');
-      game.load.image('sawmill', 'assets/tiles/test_tile.png');
+      game.load.image('sawmill', 'assets/structures/sawmill.png');
+      game.load.image('dam', 'assets/structures/dam.png');
   }
   
   function loadMap () {
