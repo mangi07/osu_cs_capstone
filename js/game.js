@@ -8,6 +8,8 @@ window.onload = function() {
   var UI_HEIGHT = 3 * TILE_LENGTH;
   var mapGroup;
   var uiGroup;
+  var uiStructureGroup;
+  var structureGroup;
   var uiResourceText;
   var lumber;
   var food;
@@ -75,10 +77,12 @@ window.onload = function() {
   function createGroups () {
       mapGroup = game.add.group();
       uiGroup = game.add.group();
+      uiStructureGroup = game.add.group();
+      structureGroup = game.add.group();
   }
 
   function loadMapTiles () {
-      game.load.image('grass', 'assets/tiles/grass.png');
+      game.load.image('structure', 'assets/tiles/grass.png');
       game.load.image('tree', 'assets/tiles/tree.png');
       game.load.image('berry', 'assets/tiles/berry.png');
   }
@@ -89,40 +93,35 @@ window.onload = function() {
       var resourceSparsityFactor = 3;
       var treeFlag = true;
 
-      for (var x = 0; x < game.world.width; x += TILE_LENGTH) {
-          for (var y = TILE_LENGTH/2; y < game.world.height - UI_HEIGHT; y += TILE_LENGTH) {
-              if (Math.floor(Math.random() * treeSparsityFactor) != 0) {
-                  tile = game.add.sprite(x, y, 'grass');
+      game.stage.backgroundColor = 0x7a4a0f;
+      for (var j = 0; j < 100; j++) {
+          x = Math.floor(Math.random() * game.world.width);
+          y = Math.floor(Math.random() * game.world.height);
+          if (x < game.world.width/3 || x > game.world.width*2/3) {
+              if (treeFlag) {
+                  tile = game.add.sprite(x, y, 'tree');
+                  treeFlag = false;
               }
               else {
-                  if (x < game.world.width/3 || x > game.world.width*2/3) {
-                      if (treeFlag) {
-                          tile = game.add.sprite(x, y, 'tree');
-                          treeFlag = false;
-                      }
-                      else {
-                          tile = game.add.sprite(x, y, 'berry');
-                          treeFlag = true;
-                      }
-                  }
-                  else {
-                      if (Math.floor(Math.random() * resourceSparsityFactor) != 0) {
-                          tile = game.add.sprite(x, y, 'grass');
-                      }
-                      else if (Math.floor(Math.random() * 2) != 0) {
-                          tile = game.add.sprite(x, y, 'tree');
-                      }
-                      else {
-                          tile = game.add.sprite(x, y, 'berry');
-                      }
-                  }
+                  tile = game.add.sprite(x, y, 'berry');
+                  tile.width = TILE_LENGTH/2;
+                  tile.height = TILE_LENGTH;
+                  treeFlag = true;
               }
-              tile.anchor.setTo(0, 0);
-              mapGroup.add(tile);
-              tile.inputEnabled = true;
-              tile.events.onInputUp.add(function (t) {
-              }, this);
           }
+          else {
+              if (Math.floor(Math.random() * 2) != 0) {
+                  tile = game.add.sprite(x, y, 'tree');
+              }
+              else {
+                  tile = game.add.sprite(x, y, 'berry');
+                  tile.width = TILE_LENGTH/2;
+                  tile.height = TILE_LENGTH;
+              }
+          }
+          tile.anchor.setTo(0, 0);
+          mapGroup.add(tile);
+          tile.inputEnabled = true;
       }
   }
 
@@ -130,10 +129,12 @@ window.onload = function() {
       var uiSprite;
       var uiResourceBar;
       for (var i = 1; i <= 5; i++) {
-          uiSprite = game.add.sprite(i * TILE_LENGTH, CAMERA_HEIGHT - 2 * TILE_LENGTH, 'tree');
-          uiSprite.anchor.setTo(0, 0);
-          uiGroup.add(uiSprite);
+          uiSprite = game.add.image(i * TILE_LENGTH + TILE_LENGTH/2, CAMERA_HEIGHT - 2 * TILE_LENGTH + TILE_LENGTH/2, 'structure');
+          uiSprite.anchor.setTo(0.5, 0.5);
+          uiStructureGroup.add(uiSprite);
       }
+      uiStructureGroup.fixedToCamera = true;
+
       uiResourceText = game.add.text(5, 5, "Lumber: " + lumber + "   Food: " + food);
       uiResourceText.fill = "white";
       uiResourceText.anchor.setTo(0, 0);
