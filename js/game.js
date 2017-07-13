@@ -30,10 +30,11 @@ window.onload = function() {
       loadMap();
 
       // TODO: swap with a call like "loadStructures"
+/*
       Structure(game).logGame();
       console.log(mapGroup);
       Structures.initStructures(mapGroup);
-
+*/
       loadUserInterface();
   }
 
