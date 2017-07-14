@@ -1,15 +1,14 @@
 window.onload = function() {
 
-  var CAMERA_WIDTH = 1024;
-  var CAMERA_HEIGHT = 512;
+  var CAMERA_WIDTH = 1280;
+  var CAMERA_HEIGHT = 640;
   var WORLD_WIDTH = 2048;
   var WORLD_HEIGHT = 2048;
   var TILE_LENGTH = 64;
   var TILE_HEIGHT = 82
-  var UI_HEIGHT = 3 * TILE_LENGTH;
+  var UI_HEIGHT = 2 * TILE_LENGTH;
   var mapGroup;
   var uiGroup;
-  var uiStructureGroup;
   var structureGroup;
   var uiResourceText;
   var lumber;
@@ -62,14 +61,14 @@ window.onload = function() {
           x = game.input.activePointer.position.x;
           y = game.input.activePointer.position.y;
 
-          if (x > CAMERA_WIDTH - TILE_LENGTH) {
+          if (x > CAMERA_WIDTH - TILE_LENGTH && y < CAMERA_HEIGHT - UI_HEIGHT) {
               game.camera.x += 10;
           }
-          else if (x < TILE_LENGTH) {
+          else if (x < TILE_LENGTH && y < CAMERA_HEIGHT - UI_HEIGHT) {
               game.camera.x -= 10;
           }
          
-          if (y > CAMERA_HEIGHT - TILE_LENGTH) {
+          if (y > CAMERA_HEIGHT - UI_HEIGHT - TILE_LENGTH/4 && y < CAMERA_HEIGHT - UI_HEIGHT) {
               game.camera.y += 10;
           }
           else if (y < TILE_LENGTH) {
@@ -85,7 +84,6 @@ window.onload = function() {
   function createGroups () {
       mapGroup = game.add.group();
       uiGroup = game.add.group();
-      uiStructureGroup = game.add.group();
       structureGroup = game.add.group();
   }
 
@@ -93,6 +91,7 @@ window.onload = function() {
       game.load.image('structure', 'assets/tiles/grass.png');
       game.load.image('tree', 'assets/tiles/tree.png');
       game.load.image('berry', 'assets/tiles/berry.png');
+      game.load.image('ui-background', 'assets/tiles/sky.png');
       game.load.image('sawmill', 'assets/structures/sawmill.png');
       game.load.image('dam', 'assets/structures/dam.png');
   }
@@ -145,14 +144,17 @@ window.onload = function() {
   function loadUserInterface () {
       var uiSprite;
       var uiResourceBar;
+      var uiBackground = game.add.image(0, CAMERA_HEIGHT - UI_HEIGHT, 'ui-background');
+      uiBackground.width = CAMERA_WIDTH;
+      uiBackground.height = UI_HEIGHT;
+      uiGroup.add(uiBackground);
+      
       for (var i = 1; i <= 5; i++) {
-          uiSprite = game.add.image(i * TILE_LENGTH + TILE_LENGTH/2, CAMERA_HEIGHT - 2 * TILE_LENGTH + TILE_LENGTH/2, 'structure');
+          uiSprite = game.add.image(i * TILE_LENGTH + TILE_LENGTH/2, CAMERA_HEIGHT - UI_HEIGHT + TILE_LENGTH + TILE_LENGTH/2, 'structure');
           uiSprite.anchor.setTo(0.5, 0.5);
-          uiStructureGroup.add(uiSprite);
+          uiGroup.add(uiSprite);
       }
-      uiStructureGroup.fixedToCamera = true;
-
-      uiResourceText = game.add.text(5, 5, "Lumber: " + lumber + "   Food: " + food);
+      uiResourceText = game.add.text(TILE_LENGTH + 5, CAMERA_HEIGHT - UI_HEIGHT + 5, "Lumber: " + lumber + "   Food: " + food);
       uiResourceText.fill = "white";
       uiResourceText.anchor.setTo(0, 0);
       uiGroup.add(uiResourceText);
