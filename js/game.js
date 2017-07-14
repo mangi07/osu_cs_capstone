@@ -5,6 +5,7 @@ window.onload = function() {
   var WORLD_WIDTH = 2048;
   var WORLD_HEIGHT = 2048;
   var TILE_LENGTH = 64;
+  var TILE_HEIGHT = 82
   var UI_HEIGHT = 3 * TILE_LENGTH;
   var mapGroup;
   var uiGroup;
@@ -101,11 +102,17 @@ window.onload = function() {
       var treeSparsityFactor = 10;
       var resourceSparsityFactor = 3;
       var treeFlag = true;
+      gridCoordsGenerator = new GridCoordinatesGenerator(
+        WORLD_WIDTH, WORLD_HEIGHT, TILE_LENGTH, TILE_HEIGHT
+      ); // test
 
       game.stage.backgroundColor = 0x7a4a0f;
       for (var j = 0; j < 100; j++) {
-          x = Math.floor(Math.random() * game.world.width);
-          y = Math.floor(Math.random() * game.world.height);
+          var coords = gridCoordsGenerator.getCoordinates(); // test
+          x = coords[0]; // test
+          y = coords[1]; // test
+          //x = Math.floor(Math.random() * game.world.width);
+          //y = Math.floor(Math.random() * game.world.height);
           if (x < game.world.width/3 || x > game.world.width*2/3) {
               if (treeFlag) {
                   tile = game.add.sprite(x, y, 'tree');
@@ -133,6 +140,7 @@ window.onload = function() {
           tile.inputEnabled = true;
       }
   }
+
 
   function loadUserInterface () {
       var uiSprite;

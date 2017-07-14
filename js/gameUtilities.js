@@ -80,6 +80,88 @@ var GameUtilities = {
 
 	}
 
+};
 
+/**
+* @param {Number} gameWidth - The width of the game map
+* @param {Number} gameHeight - The height of the game map
+* @param {Number} tileWidth - The width that a map sprite must fit in
+* @param {Number} tileHeight - The width that a map sprite must fit in
+*
+* This helper class provides a unique pair of coordinates for each sprite placed
+* on the map so they will not collide, as long as the sprite is within
+* the dimensions of tileWidth x tileHeight.
+* 
+* It divides the game map into a grid to avoid collisions.
+* 
+* An object must be created from this class and getCoordinates must be 
+* called on the object in order to return a unique pair of coordinates
+* each time.
+*/
+function GridCoordinatesGenerator(gameWidth, gameHeight, tileWidth, tileHeight){
+
+	var tilesAcross = Math.floor(gameWidth / tileWidth);
+	var tilesDown = Math.floor(gameHeight / tileHeight);
+
+	var arrayLength = tilesAcross * tilesDown;
+
+	var tileArray = [];
+	for (var x = 0; x < arrayLength; x++) {
+		tileArray.push(x);
+	}
+
+	this.getCoordinates = function() {
+
+		var index = Math.floor(Math.random() * tileArray.length);
+		var tileNumber = tileArray[index];
+		tileArray.splice(index, 1);
+
+		var xCoord = Math.floor(tileNumber / tilesDown) * tileWidth;
+		var yCoord = (tileNumber % tilesDown) * tileHeight;
+
+		return [xCoord, yCoord];
+
+	}
+
+}
+
+
+/* UNUSED - MAY BECOME OBSOLETE */
+function separateOverlappingTreesBerryBushes(newSprite, mapGroup){
+
+	mapGroup.enableBody = true;
+	mapGroup.physicsBodyType = Phaser.Physics.ARCADE;
+
+	var oldX = newSprite.position.x;
+	var oldY = newSprite.position.y;
+	game.physics.arcade.collide(newSprite, mapGroup);
+	//game.physics.arcade.overlap(newSprite, mapGroup, collisionHandler);
+
+	// TODO: test with above variables
+	if (oldX != newSprite.position.x || oldY != newSprite.position.y){
+		console.log("*********************************");
+		console.log("THEY ARE DIFFERENT: ");
+		console.log("old x, y:" + oldX + ", " + oldY);
+		console.log("new x, y:" + newSprite.position.x + ", " + newSprite.position.y);
+		console.log("*********************************");
+	} else {
+		console.log("*********************************");
+		console.log("THEY ARE THE SAME: ");
+		console.log("old x, y:" + oldX + ", " + oldY);
+		console.log("new x, y:" + newSprite.position.x + ", " + newSprite.position.y);
+		console.log("*********************************");
+	}
+
+
+	function collisionHandler(newSprite, mapGroupSprite){
+		//newSprite.kill();
+		//mapGroupSprite.kill();
+		console.log("collision detected");
+		// TODO: test with moving the sprite to the middle of the map
+		newSprite.position.x = 0;
+		newSprite.position.y = 0;
+		//game.add.sprite(0,0,'sawmill');
+		return true;
+	}
 
 }
