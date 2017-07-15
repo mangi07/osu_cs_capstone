@@ -105,7 +105,7 @@ window.onload = function() {
       var resourceSparsityFactor = 3;
       var treeFlag = true;
 
-      game.stage.backgroundColor = 0x3bba4d;
+      game.stage.backgroundColor = 0x22b14c;
       for (var j = 0; j < 100; j++) {
           var coords = gridCoordsGenerator.getCoords(3);
           x = coords[0];
