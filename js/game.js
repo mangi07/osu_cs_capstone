@@ -10,7 +10,11 @@ window.onload = function() {
   var mapGroup;
   var uiGroup;
   var uiStructureGroup;
-  var structureGroup;
+  var gridCoordsGenerator = new GridCoordinatesGenerator(
+    WORLD_WIDTH, WORLD_HEIGHT, TILE_LENGTH, TILE_HEIGHT
+  );
+  var playerStructureGroup;
+  var enemyStructureGroup;
   var uiResourceText;
   var lumber;
   var food;
@@ -29,13 +33,6 @@ window.onload = function() {
       initResourceCount();
       createGroups();
       loadMap();
-
-      // TODO: swap with a call like "loadStructures"
-/*
-      Structure(game).logGame();
-      console.log(mapGroup);
-      Structures.initStructures(mapGroup);
-*/
       loadUserInterface();
   }
 
@@ -84,9 +81,10 @@ window.onload = function() {
 
   function createGroups () {
       mapGroup = game.add.group();
+      playerStructureGroup = game.add.group();
+      enemyStructureGroup = game.add.group();
       uiGroup = game.add.group();
       uiStructureGroup = game.add.group();
-      structureGroup = game.add.group();
   }
 
   function loadMapTiles () {
@@ -102,15 +100,12 @@ window.onload = function() {
       var treeSparsityFactor = 10;
       var resourceSparsityFactor = 3;
       var treeFlag = true;
-      gridCoordsGenerator = new GridCoordinatesGenerator(
-        WORLD_WIDTH, WORLD_HEIGHT, TILE_LENGTH, TILE_HEIGHT
-      ); // test
 
       game.stage.backgroundColor = 0x7a4a0f;
       for (var j = 0; j < 100; j++) {
-          var coords = gridCoordsGenerator.getCoordinates(); // test
-          x = coords[0]; // test
-          y = coords[1]; // test
+          var coords = gridCoordsGenerator.getCoords(3);
+          x = coords[0];
+          y = coords[1];
           //x = Math.floor(Math.random() * game.world.width);
           //y = Math.floor(Math.random() * game.world.height);
           if (x < game.world.width/3 || x > game.world.width*2/3) {
@@ -138,6 +133,13 @@ window.onload = function() {
           tile.anchor.setTo(0, 0);
           mapGroup.add(tile);
           tile.inputEnabled = true;
+
+          Structures.initStructures(
+            gridCoordsGenerator, 
+            playerStructureGroup, 
+            enemyStructureGroup, 
+            game
+          );
       }
   }
 

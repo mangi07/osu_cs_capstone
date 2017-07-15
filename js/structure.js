@@ -1,4 +1,5 @@
 
+/* THIS MAY BECOME OBSOLETE */
 function Structure(game) {
 	if (!(this instanceof Structure)) {
 		// the constructor was called without "new".
@@ -10,15 +11,52 @@ function Structure(game) {
 
 }
 
-// may be called after tile map is loaded
-// requires gameUtilities.js
+/* Performs various operations related to structures */
 var Structures = {
 
-	initStructures: function(mapGroup){
+	/**
+	* may be used after tile map is loaded
+	* requires gameUtilities.js
+	* @param {Object} coordsGenerator - takes a GridCoordinatesGenerator object
+	*   (see gameUtilities.js)
+	* @param {Object} playerGroup - the sprite group that represents the player's structures
+	* @param {Object} enemyGroup - the sprite group that represents the enemy's structures
+	* @param {Object} game - Phaser game object
+	* 
+	*/
+	initStructures: function(coordsGenerator, playerGroup, enemyGroup, game){
 
 		// load sawmills and dams in different parts of the map
-		GameUtilities.randomReplaceTilesWithKey(mapGroup, "grass", "sawmill", 1.2, 0);
-		GameUtilities.randomReplaceTilesWithKey(mapGroup, "grass", "dam", 1.2, 1);
+
+		//GameUtilities.randomReplaceTilesWithKey(mapGroup, "grass", "sawmill", 1.2, 0); // tile map version
+		//GameUtilities.randomReplaceTilesWithKey(mapGroup, "grass", "dam", 1.2, 1); // tile map version
+
+		for ( var i = 200; i < coordsGenerator.tilesRemainingLeftThird(); i++ ) {
+			var coords = coordsGenerator.getCoords(1);
+			var x = coords[0];
+			var y = coords[1];
+	
+			playerStructure = game.add.sprite(x, y, 'sawmill');
+			playerStructure.anchor.setTo(0, 0);
+			playerGroup.add(playerStructure);
+			playerStructure.inputEnabled = true;
+
+		}
+		
+
+		for ( var i = 200; i < coordsGenerator.tilesRemainingRightThird(); i++ ) {
+			var coords = coordsGenerator.getCoords(2);
+			var x = coords[0];
+			var y = coords[1];
+	
+			enemyStructure = game.add.sprite(x, y, 'dam');
+			enemyStructure.anchor.setTo(0, 0);
+			enemyGroup.add(enemyStructure);
+			enemyStructure.inputEnabled = true;
+
+		}
+
+
 
 	}
 

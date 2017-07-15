@@ -110,17 +110,69 @@ function GridCoordinatesGenerator(gameWidth, gameHeight, tileWidth, tileHeight){
 		tileArray.push(x);
 	}
 
-	this.getCoordinates = function() {
+	var index;
+	var leftIndex = Math.floor( arrayLength / 3 );
+	var rightIndex = Math.floor( arrayLength * 2/3 );
+	var xCoord, yCoord;
+	var tileNumber;
 
-		var index = Math.floor(Math.random() * tileArray.length);
-		var tileNumber = tileArray[index];
-		tileArray.splice(index, 1);
+	var PLAYER_SIDE = 1;
+	var ENEMY_SIDE = 2;
+	var WHOLE_MAP = 3;
 
-		var xCoord = Math.floor(tileNumber / tilesDown) * tileWidth;
-		var yCoord = (tileNumber % tilesDown) * tileHeight;
+	var _useRandomIndex = function(area) {
+		if( area == PLAYER_SIDE ) {
+			index = Math.floor( Math.random() * leftIndex );
+			leftIndex--;
+			rightIndex--;
 
+		} else if( area == ENEMY_SIDE ) {
+			index = Math.floor( Math.random() * (tileArray.length - rightIndex) + rightIndex );
+
+		} else if( area == WHOLE_MAP ) {
+			index = Math.floor(Math.random() * tileArray.length);
+			rightIndex--;
+			console.log(index);
+		}
+	}
+
+	this.getCoords = function(mapArea) {
+		if( tileArray.length < 1 ) return;
+		_useRandomIndex(mapArea);
+		tileNumber = tileArray[index];
+		xCoord = Math.floor(tileNumber / tilesDown) * tileWidth;
+		yCoord = (tileNumber % tilesDown) * tileHeight;
+		tileArray.splice( index, 1 );
 		return [xCoord, yCoord];
+	}
 
+/*
+	this.getCoordinatesLeftThird = function() {
+		if( tileArray.length < 1 ) return;
+		_useRandomIndex( PLAYER_SIDE );
+		tileNumber = tileArray[index];
+		return _getCoords();
+	}
+
+	this.getCoordinatesRightThird = function() {
+		if( tileArray.length < 1 ) return;
+		_useRandomIndex(ENEMY_SIDE);
+		tileNumber = tileArray[index];
+		return _getCoords();
+	}
+*/
+	this.getTileArray = function() {
+		return tileArray;
+	}
+
+	this.tilesRemainingLeftThird = function() {
+		if (tileArray.length < 1) return 0;
+		return leftIndex + 1;
+	}
+
+	this.tilesRemainingRightThird = function() {
+		if (tileArray.length < 1) return 0;
+		return tileArray.length - rightIndex + 1;
 	}
 
 }
