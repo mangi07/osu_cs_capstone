@@ -17,6 +17,7 @@ window.onload = function() {
   var uiResourceText;
   var lumber;
   var food;
+  var gameOver;
 
   var game = new Phaser.Game(CAMERA_WIDTH, CAMERA_HEIGHT, Phaser.AUTO, '',
     { preload: preload, create: create, update: update, render: render });
@@ -33,11 +34,15 @@ window.onload = function() {
       createGroups();
       loadMap();
       loadUserInterface();
+      gameOver = false;
   }
 
   function update () {
-    updateCameraView();
-    updateResourceText();
+      if (!gameOver) {
+          updateCameraView();
+          updateResourceText();
+      }
+      checkGameOver();
   }
 
   function render() {
@@ -100,7 +105,7 @@ window.onload = function() {
       var resourceSparsityFactor = 3;
       var treeFlag = true;
 
-      game.stage.backgroundColor = 0x7a4a0f;
+      game.stage.backgroundColor = 0x3bba4d;
       for (var j = 0; j < 100; j++) {
           var coords = gridCoordsGenerator.getCoords(3);
           x = coords[0];
@@ -161,5 +166,21 @@ window.onload = function() {
       uiResourceText.anchor.setTo(0, 0);
       uiGroup.add(uiResourceText);
       uiGroup.fixedToCamera = true;
+  }
+
+  function checkGameOver() {
+      var resultString;
+      var gameOverText;
+      if (playerStructureGroup.countLiving() == 0 ||
+          enemyStructureGroup.countLiving() == 0) {
+          gameOver = true;
+          if (playerStructureGroup.countLiving() == 0)
+              resultString = "LOSE";
+          else
+              resultString = "WIN";
+          gameOverText = game.add.text(game.camera.x + CAMERA_WIDTH/2, game.camera.y + CAMERA_HEIGHT/2, "GAME OVER - YOU " + resultString + "!");
+          gameOverText.anchor.setTo(0.5, 0.5);
+          gameOverText.fontSize = 60;
+      }
   }
 };
