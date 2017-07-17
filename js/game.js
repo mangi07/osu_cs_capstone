@@ -6,7 +6,7 @@ window.onload = function () {
     var WORLD_HEIGHT = 2048;
     var TILE_LENGTH = 64;
     var TILE_HEIGHT = 82
-    var UI_HEIGHT = 2 * TILE_LENGTH;
+    var UI_HEIGHT = 2 * TILE_LENGTH + TILE_LENGTH / 4;
     var mapGroup;
     var uiGroup;
     var gridCoordsGenerator = new GridCoordinatesGenerator(
@@ -63,8 +63,6 @@ window.onload = function () {
         if (!gameOver) {
             updateCameraView();
             updateUIText();
-        }
-        checkGameOver();
 
         for (i = 0; i < playerUnits.children.length; i++) {
             game.physics.arcade.overlap(playerUnits.children[i], game['destPoint' + playerUnits.children[i].name], stopUnit, null, this);
@@ -81,14 +79,8 @@ window.onload = function () {
             }
         }
 
-        if (downKey.isDown) {
-            spawnPlayerUnit();
         }
-
-
-        if (upKey.isDown) {
-            spawnEnemyUnit();
-        }
+        checkGameOver();
     }
 
     function moveUnit() {
@@ -175,7 +167,7 @@ window.onload = function () {
                 game.camera.x -= 10;
             }
 
-            if (y > CAMERA_HEIGHT - UI_HEIGHT - TILE_LENGTH / 4 && y < CAMERA_HEIGHT - UI_HEIGHT * .5) {
+            if (y > CAMERA_HEIGHT - TILE_LENGTH / 4) {
                 game.camera.y += 10;
             }
             else if (y < TILE_LENGTH) {
@@ -196,7 +188,9 @@ window.onload = function () {
     function loadSprites() {
         game.load.image('structure', 'assets/tiles/grass.png');
         game.load.image('tree', 'assets/tiles/tree.png');
-        game.load.image('berry', 'assets/tiles/berry.png');
+        game.load.image('cut-tree', 'assets/tiles/cut-tree.png');
+        game.load.image('berry', 'assets/tiles/berry-bush.png');
+        game.load.image('cut-berry', 'assets/tiles/cut-berry-bush.png');
         game.load.image('ui-background', 'assets/tiles/sky.png');
         game.load.image('sawmill', 'assets/structures/sawmill.png');
         game.load.image('dam', 'assets/structures/dam.png');
@@ -215,6 +209,7 @@ window.onload = function () {
         var treeSparsityFactor = 10;
         var resourceSparsityFactor = 3;
         var treeFlag = true;
+        var secondClick = false;
 
         game.stage.backgroundColor = 0x22b14c;
         for (var j = 0; j < 100; j++) {
@@ -230,7 +225,7 @@ window.onload = function () {
                 }
                 else {
                     tile = game.add.sprite(x, y, 'berry');
-                    tile.width = TILE_LENGTH / 2;
+                    tile.width = TILE_LENGTH;
                     tile.height = TILE_LENGTH;
                     treeFlag = true;
                 }
@@ -241,21 +236,40 @@ window.onload = function () {
                 }
                 else {
                     tile = game.add.sprite(x, y, 'berry');
-                    tile.width = TILE_LENGTH / 2;
+                    tile.width = TILE_LENGTH;
                     tile.height = TILE_LENGTH;
                 }
             }
             tile.anchor.setTo(0, 0);
             mapGroup.add(tile);
             tile.inputEnabled = true;
-
+        }
             Structures.initStructures(
               gridCoordsGenerator,
               playerStructureGroup,
               enemyStructureGroup,
               game
             );
-        }
+	/*
+	borrowed from: http://www.andy-howard.com/how-to-double-click-in-phaser/index.html on 7/12/17
+*/
+        playerStructureGroup.forEach(function(structure) {
+            structure.events.onInputDown.add(function(itemBeingClicked) {
+                if (!secondClick) { 
+                    secondClick = true;
+                    game.time.events.add(300, function(){
+                        secondClick = false;
+                    }, this);
+                }
+                else {
+                    if (lumber > 0 && food > 0) {
+                        lumber -= 10;
+                        food -= 10;
+	                spawnPlayerUnit(structure.position);
+                    }
+                }
+	    }, this);
+        });
     }
 
 
@@ -316,20 +330,20 @@ window.onload = function () {
     }
 
     function createUnits() {
-        playerUnit1 = playerUnits.create(770, game.world.height - 1550, 'beaver');
-        playerUnit2 = playerUnits.create(32, game.world.height - 1550, 'beaver');
-        lumber1 = computerUnits.create(732, game.world.height - 1955, 'lumberjack');
-        lumber2 = computerUnits.create(55, game.world.height - 1955, 'lumberjack');
-        playerBase = playerStructureGroup.create(32, game.world.height - 1550, 'dam');
-        enemyBase = enemyStructureGroup.create(55, game.world.height - 1955, 'sawmill');
+        playerUnit1 = playerUnits.create(770, game.world.height - 1550, 'lumberjack');
+        playerUnit2 = playerUnits.create(32, game.world.height - 1550, 'lumberjack');
+        lumber1 = computerUnits.create(732, game.world.height - 1955, 'beaver');
+        lumber2 = computerUnits.create(55, game.world.height - 1955, 'beaver');
+        playerBase = playerStructureGroup.create(32, game.world.height - 1550, 'sawmill');
+        enemyBase = enemyStructureGroup.create(55, game.world.height - 1955, 'dam');
         playerUnit1.HP = 1000000;
-        playerUnit1.type = "Beaver"
+        playerUnit1.type = "Lumber Jack"
         playerUnit1.name = "playerunit1";
         playerUnit2.HP = 1000000;
-        playerUnit2.type = "Beaver"
+        playerUnit2.type = "Lumber Jack"
         playerUnit2.name = "playerunit2";
-        lumber1.type = "Lumber Jack";
-        lumber2.type = "Lumber Jack";
+        lumber1.type = "Beaver";
+        lumber2.type = "Beaver";
         lumber1.name = "lumber1";
         lumber2.name = "lumber2";
         lumber1.HP = 1000000;
@@ -353,8 +367,8 @@ window.onload = function () {
         selectedUnit = lumber2;
     }
 
-    function spawnPlayerUnit() {
-        playerUnit = playerUnits.create(330, game.world.height - (1550 + (unitCount * 50)), 'beaver');
+    function spawnPlayerUnit(position) {
+        playerUnit = playerUnits.create(position.x, position.y, 'lumberjack');
         playerUnit.Name = "playerUnit" + unitCount;
         playerUnit.width = 40;
         playerUnit.height = 40;
@@ -366,7 +380,7 @@ window.onload = function () {
     }
 
     function spawnEnemyUnit() {
-        enemyUnit = computerUnits.create(530, game.world.height - (1550 + (unitcount2 * 50)), 'lumberjack');
+        enemyUnit = computerUnits.create(530, game.world.height - (1550 + (unitcount2 * 50)), 'beaver');
         enemyUnit.Name = "enemyUnit" + unitcount2;
         enemyUnit.width = 40;
         enemyUnit.height = 40;
