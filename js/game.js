@@ -10,7 +10,7 @@ window.onload = function () {
     var POSITION_ADJUST = 4;
     var VELOCITY = 200;
     var STARTINGLUMBER = 100;
-    var STARTINGFOOD;
+    var STARTINGFOOD = 100;
     var UI_HEIGHT = 2 * TILE_LENGTH + TILE_LENGTH / 4;
     var mapGroup;
     var uiGroup;
@@ -139,7 +139,7 @@ window.onload = function () {
                     }
                     else {
                         if (playerUnits.getIndex(unit) > -1)
-                            food += 10;
+                            game.resources.food += 10;
                         else
                             enemyFood += 10;
                     }
@@ -373,9 +373,9 @@ if (destSprite != undefined && playerUnits.getIndex(destSprite) == -1
                     }, this);
                 }
                 else {
-                    if (game.resources.lumber > 0 && resources.food > 0) {
+                    if (game.resources.lumber > 0 && game.resources.food > 0) {
                         game.resources.lumber -= 10;
-                        resources.food -= 10;
+                        game.resources.food -= 10;
                         spawnX = structure.position.x - TILE_LENGTH;
                         spawnY = structure.position.y - TILE_LENGTH;
                         spawnPlayerUnit(spawnX, spawnY);
