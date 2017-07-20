@@ -568,4 +568,3 @@ if (destSprite != undefined && playerUnits.getIndex(destSprite) == -1
             });
         //game.physics.arcade.moveToObject(compUnit1, closestResource, VELOCITY);
     }
-};
