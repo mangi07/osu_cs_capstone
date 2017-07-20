@@ -247,7 +247,7 @@ if (destSprite != undefined && playerUnits.getIndex(destSprite) == -1
             console.log(unit.HP);
         }
         
-    }
+    
     function unitCombat(player, enemy) {
         stopUnit(player, game['destPoint' + player.name]);
         if (computerUnits.getIndex(enemy) > -1) {
@@ -567,4 +567,6 @@ if (destSprite != undefined && playerUnits.getIndex(destSprite) == -1
                 }
             });
         //game.physics.arcade.moveToObject(compUnit1, closestResource, VELOCITY);
+    
     }
+};
