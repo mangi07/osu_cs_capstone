@@ -49,13 +49,15 @@ window.onload = function () {
         bgm = game.add.audio('bgm');
         game.physics.startSystem(Phaser.Physics.ARCADE);
         game.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-        initResourceCount();
         createGroups();
         loadMap();
+        initResourceCount();
+        
+        loadUserInterface();
+        
         createUnits();
         initEnemyAI();
         game.input.onDown.add(moveUnit, this);
-        loadUserInterface();
         gameOver = false;
 
         game.sound.setDecodedCallback([bgm], start, this);
@@ -412,7 +414,7 @@ if (destSprite != undefined && playerUnits.getIndex(destSprite) == -1
             );
         }
 
-        uiResourceText = game.add.text(TILE_LENGTH + 5, CAMERA_HEIGHT - UI_HEIGHT + 5, "Lumber: " + game.resources.lumber + "   Food: " + resources.food);
+        uiResourceText = game.add.text(TILE_LENGTH + 5, CAMERA_HEIGHT - UI_HEIGHT + 5, "Lumber: " + game.resources.lumber + "   Food: " + game.resources.food);
         uiUnitText = game.add.text(TILE_LENGTH + 600, CAMERA_HEIGHT - UI_HEIGHT + 5, "Selected Unit: ");
         uiResourceText.fill = "white";
         uiUnitText.anchor.setTo(0, 0);
