@@ -200,7 +200,6 @@ window.onload = function () {
         if (game['destPoint' + selectedUnit.name]) {
             game['destPoint' + selectedUnit.name].kill();
         }
-*/
         game['destPoint' + selectedUnit.name] = game.add.sprite(this.game.input.activePointer.x + game.camera.x, this.game.input.activePointer.y + game.camera.y);
 
         game['destPoint' + selectedUnit.name].enableBody = true;
