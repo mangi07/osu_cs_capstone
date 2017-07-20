@@ -9,7 +9,8 @@ window.onload = function () {
     var TILE_HEIGHT = 82;
     var POSITION_ADJUST = 4;
     var VELOCITY = 200;
-
+    var STARTINGLUMBER = 100;
+    var STARTINGFOOD;
     var UI_HEIGHT = 2 * TILE_LENGTH + TILE_LENGTH / 4;
     var mapGroup;
     var uiGroup;
@@ -26,7 +27,7 @@ window.onload = function () {
     var uiSelectedUnit;
     var lumber;
     var food;
-    var resources = {lumber:lumber, food:food};
+    var resources = {lumber:STARTINGLUMBER, food:STARTINGFOOD};
     var gameOver;
     var bgm;
     var selectedUnit;
@@ -53,7 +54,7 @@ window.onload = function () {
         loadMap();
         createUnits();
         initEnemyAI();
-
+        game.resources = {lumber:STARTINGLUMBER, food:STARTINGFOOD};
         game.input.onDown.add(moveUnit, this);
         loadUserInterface();
         gameOver = false;
@@ -63,6 +64,7 @@ window.onload = function () {
         downKey = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
 
         upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
+
     }
 
     function start() {
@@ -130,7 +132,7 @@ window.onload = function () {
                 game.time.events.add(5000, function(){
                     if (resource.type == 'tree') {
                         if (playerUnits.getIndex(unit) > -1)
-                            lumber += 10;
+                            resources.lumber += 10;
                         else
                             enemyLumber += 10;
                     }
@@ -175,25 +177,7 @@ window.onload = function () {
 
         // when placing a resource and dragging over a sprite it should not overlap, tint the dragged resource red
         Structures.update(uiGroup, playerStructureGroup, enemyStructureGroup, mapGroup, game);
-    }
 
-    function moveUnit() {
-        for (i = 0; i < playerUnits.children.length; i++) {
-            if (Phaser.Rectangle.contains(playerUnits.children[i].body, this.game.input.activePointer.x + game.camera.x, this.game.input.activePointer.y + game.camera.y)) {
-                console.log(playerUnits.children[i]);
-                selectedUnit = playerUnits.children[i];
-                console.log(selectedUnit, playerUnits.children[i]);
-                return;
-            }
-        }
-        for (i = 0; i < computerUnits.children.length; i++) {
-            if (Phaser.Rectangle.contains(computerUnits.children[i].body, this.game.input.activePointer.x + game.camera.x, this.game.input.activePointer.y + game.camera.y)) {
-                console.log(computerUnits.children[i]);
-                selectedUnit = computerUnits.children[i];
-                console.log(selectedUnit, computerUnits.children[i]);
-                return;
-            }
-        }
 
         console.log(selectedUnit);
 
@@ -207,7 +191,6 @@ window.onload = function () {
         game.physics.arcade.moveToObject(selectedUnit, game['destPoint' + selectedUnit.name], VELOCITY);
       }
     }
-        game.physics.arcade.moveToObject(selectedUnit, game['destPoint' + selectedUnit.name], 60);
 
     function moveCompUnit() {
       if (!gameOver) {
@@ -267,8 +250,8 @@ if (destSprite != undefined && playerUnits.getIndex(destSprite) == -1
     }
 
     function initResourceCount() {
-        lumber = 100;
-        food = 100;
+        resources.lumber = 100;
+        resources.food = 100;
         enemyLumber = 100;
         enemyFood = 100;
     }
@@ -279,14 +262,14 @@ if (destSprite != undefined && playerUnits.getIndex(destSprite) == -1
         if (game.input.activePointer.isUp) {
             x = game.input.activePointer.position.x;
             y = game.input.activePointer.position.y;
-            if (x > CAMERA_WIDTH - TILE_LENGTH && y < CAMERA_HEIGHT - UI_HEIGHT) {
+            if (x > CAMERA_WIDTH - TILE_LENGTH && y < CAMERA_HEIGHT - TILE_LENGTH) {
                 game.camera.x += 10;
             }
-            else if (x < TILE_LENGTH && y < CAMERA_HEIGHT - UI_HEIGHT) {
+            else if (x < TILE_LENGTH && y < CAMERA_HEIGHT - TILE_LENGTH) {
                 game.camera.x -= 10;
             }
 
-            if (y > CAMERA_HEIGHT - UI_HEIGHT - TILE_LENGTH / 4 && y < CAMERA_HEIGHT - UI_HEIGHT * .5) {
+            if (y > CAMERA_HEIGHT - TILE_LENGTH - TILE_LENGTH / 4 && y < CAMERA_HEIGHT - TILE_LENGTH * .5) {
                 game.camera.y += 10;
             }
             else if (y < TILE_LENGTH) {
@@ -389,9 +372,9 @@ if (destSprite != undefined && playerUnits.getIndex(destSprite) == -1
                     }, this);
                 }
                 else {
-                    if (lumber > 0 && food > 0) {
-                        lumber -= 10;
-                        food -= 10;
+                    if (resources.lumber > 0 && resources.food > 0) {
+                        resources.lumber -= 10;
+                        resources.food -= 10;
                         spawnX = structure.position.x - TILE_LENGTH;
                         spawnY = structure.position.y - TILE_LENGTH;
                         spawnPlayerUnit(spawnX, spawnY);
@@ -430,7 +413,7 @@ if (destSprite != undefined && playerUnits.getIndex(destSprite) == -1
             );
         }
 
-        uiResourceText = game.add.text(TILE_LENGTH + 5, CAMERA_HEIGHT - UI_HEIGHT + 5, "Lumber: " + lumber + "   Food: " + food);
+        uiResourceText = game.add.text(TILE_LENGTH + 5, CAMERA_HEIGHT - UI_HEIGHT + 5, "Lumber: " + game.resources.lumber + "   Food: " + resources.food);
         uiUnitText = game.add.text(TILE_LENGTH + 600, CAMERA_HEIGHT - UI_HEIGHT + 5, "Selected Unit: ");
         uiResourceText.fill = "white";
         uiUnitText.anchor.setTo(0, 0);
@@ -448,7 +431,7 @@ if (destSprite != undefined && playerUnits.getIndex(destSprite) == -1
 
     function updateUIText() {
         //console.log(selectedUnit);
-        uiResourceText.setText("Lumber: " + lumber + "   Food: " + food);
+        uiResourceText.setText("Lumber: " + game.resources.lumber + "   Food: " + resources.food);
         uiUnitText.setText("Selected Unit: " + (selectedUnit && selectedUnit.type ? selectedUnit.type : "None") + "\nHitPoints: " + selectedUnit.HP);
         uiSelectedUnit.loadTexture(selectedUnit.key, 0, false);
         uiSelectedUnit.width = UI_HEIGHT;

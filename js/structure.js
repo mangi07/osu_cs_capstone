@@ -145,7 +145,7 @@ var Structures = {
 		        sprite.position.x += sprite.game.camera.x;
 		        sprite.position.y += sprite.game.camera.y;
 
-		        resourcePoints.lumber -= 5;
+		        game.resources.lumber -= 5;
 
 		        // replace resource tile
 		        replacementSprite = game.add.sprite(originX, originY, sprite.key);
@@ -181,7 +181,7 @@ var Structures = {
 	update: function(addingStructureGroup, playerStructureGroup, enemyStructureGroup, mapGroup, game){
 	    // test collision with object
 	    var addingStructure;
-
+			console.log(game);
 	    for (var i = 0; i < addingStructureGroup.length; i++){
 	    	addingStructure = addingStructureGroup.children[i];
 	    	if ( ! game.physics.arcade.overlap(addingStructure, playerStructureGroup, overlapCallback) &&
