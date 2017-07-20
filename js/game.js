@@ -431,7 +431,7 @@ if (destSprite != undefined && playerUnits.getIndex(destSprite) == -1
 
     function updateUIText() {
         //console.log(selectedUnit);
-        uiResourceText.setText("Lumber: " + game.resources.lumber + "   Food: " + resources.food);
+        uiResourceText.setText("Lumber: " + game.resources.lumber + "   Food: " + game.resources.food);
         uiUnitText.setText("Selected Unit: " + (selectedUnit && selectedUnit.type ? selectedUnit.type : "None") + "\nHitPoints: " + selectedUnit.HP);
         uiSelectedUnit.loadTexture(selectedUnit.key, 0, false);
         uiSelectedUnit.width = UI_HEIGHT;
