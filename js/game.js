@@ -14,6 +14,7 @@ window.onload = function () {
     );
     var playerStructureGroup;
     var enemyStructureGroup;
+    var addingStructureGroup;
     var playerUnits;
     var computerUnits;
     var uiResourceText;
@@ -21,6 +22,7 @@ window.onload = function () {
     var uiSelectedUnit;
     var lumber;
     var food;
+    var resources = {lumber:lumber, food:food};
     var gameOver;
     var bgm;
     var selectedUnit;
@@ -89,6 +91,9 @@ window.onload = function () {
         if (upKey.isDown) {
             spawnEnemyUnit();
         }
+
+        // when placing a resource and dragging over a sprite it should not overlap, tint the dragged resource red
+        Structures.update(uiGroup, playerStructureGroup, enemyStructureGroup, mapGroup, game);
     }
 
     function moveUnit() {
@@ -159,6 +164,8 @@ window.onload = function () {
     function initResourceCount() {
         lumber = 100;
         food = 100;
+        resources.lumber = lumber;
+        resources.food = food;
     }
 
     function updateCameraView() {
@@ -188,6 +195,7 @@ window.onload = function () {
         mapGroup = game.add.group();
         playerStructureGroup = game.add.group();
         enemyStructureGroup = game.add.group();
+        addingStructureGroup = game.add.group();
         uiGroup = game.add.group();
         playerUnits = game.add.group();
         computerUnits = game.add.group();
@@ -248,6 +256,7 @@ window.onload = function () {
             tile.anchor.setTo(0, 0);
             mapGroup.add(tile);
             tile.inputEnabled = true;
+            game.physics.arcade.enable(tile);
 
             Structures.initStructures(
               gridCoordsGenerator,
@@ -267,11 +276,28 @@ window.onload = function () {
         uiBackground.height = UI_HEIGHT;
         uiGroup.add(uiBackground);
 
-        for (var i = 1; i <= 5; i++) {
-            uiSprite = game.add.image(i * TILE_LENGTH + TILE_LENGTH / 2, CAMERA_HEIGHT - UI_HEIGHT + TILE_LENGTH + TILE_LENGTH / 2, 'structure');
+        addingStructureGroup.inputEnableChildren = true;
+        var structureSprites = ["sawmill", "structure", "structure", "structure", "structure"]
+        var x;
+        var y = CAMERA_HEIGHT - UI_HEIGHT + TILE_LENGTH + TILE_LENGTH / 2;
+        for (var i = 1; i <= structureSprites.length; i++) {
+            x = i * TILE_LENGTH + TILE_LENGTH / 2;
+            uiSprite = game.add.sprite(x, y, structureSprites[i-1]);
             uiSprite.anchor.setTo(0.5, 0.5);
             uiGroup.add(uiSprite);
+
+            Structures.enableStructureCreation(
+              uiGroup,
+              uiSprite, 
+              playerStructureGroup,
+              enemyStructureGroup,
+              mapGroup, 
+              resources,
+              game
+            );
+
         }
+
         uiResourceText = game.add.text(TILE_LENGTH + 5, CAMERA_HEIGHT - UI_HEIGHT + 5, "Lumber: " + lumber + "   Food: " + food);
         uiUnitText = game.add.text(TILE_LENGTH + 600, CAMERA_HEIGHT - UI_HEIGHT + 5, "Selected Unit: ");
         uiResourceText.fill = "white";
@@ -289,8 +315,8 @@ window.onload = function () {
     }
 
     function updateUIText() {
-        console.log(selectedUnit);
-        uiResourceText.setText("Lumber: " + lumber + "   Food: " + food);
+        //console.log(selectedUnit);
+        uiResourceText.setText("Lumber: " + resources.lumber + "   Food: " + resources.food);
         uiUnitText.setText("Selected Unit: " + (selectedUnit && selectedUnit.type ? selectedUnit.type : "None") + "\nHitPoints: " + selectedUnit.HP);
         uiSelectedUnit.loadTexture(selectedUnit.key, 0, false);
         uiSelectedUnit.width = UI_HEIGHT;
