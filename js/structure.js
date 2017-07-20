@@ -41,6 +41,7 @@ var Structures = {
 			playerGroup.add(playerStructure);
 			playerStructure.inputEnabled = true;
                         game.physics.arcade.enable(playerStructure);
+			playerStructure.HP = 10000;
 
 		}
 		
@@ -54,6 +55,8 @@ var Structures = {
 			enemyStructure.anchor.setTo(0, 0);
 			enemyGroup.add(enemyStructure);
 			enemyStructure.inputEnabled = true;
+                        game.physics.arcade.enable(enemyStructure);
+			enemyStructure.HP = 10000;
 
 		}
 
