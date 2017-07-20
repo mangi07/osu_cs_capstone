@@ -132,7 +132,7 @@ window.onload = function () {
                 game.time.events.add(5000, function(){
                     if (resource.type == 'tree') {
                         if (playerUnits.getIndex(unit) > -1)
-                            resources.lumber += 10;
+                            game.resources.lumber += 10;
                         else
                             enemyLumber += 10;
                     }
@@ -250,8 +250,8 @@ if (destSprite != undefined && playerUnits.getIndex(destSprite) == -1
     }
 
     function initResourceCount() {
-        resources.lumber = 100;
-        resources.food = 100;
+        game.resources.lumber = 100;
+        game.resources.food = 100;
         enemyLumber = 100;
         enemyFood = 100;
     }
@@ -372,8 +372,8 @@ if (destSprite != undefined && playerUnits.getIndex(destSprite) == -1
                     }, this);
                 }
                 else {
-                    if (resources.lumber > 0 && resources.food > 0) {
-                        resources.lumber -= 10;
+                    if (game.resources.lumber > 0 && resources.food > 0) {
+                        game.resources.lumber -= 10;
                         resources.food -= 10;
                         spawnX = structure.position.x - TILE_LENGTH;
                         spawnY = structure.position.y - TILE_LENGTH;
