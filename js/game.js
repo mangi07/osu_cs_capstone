@@ -54,7 +54,6 @@ window.onload = function () {
         loadMap();
         createUnits();
         initEnemyAI();
-        game.resources = {lumber:STARTINGLUMBER, food:STARTINGFOOD};
         game.input.onDown.add(moveUnit, this);
         loadUserInterface();
         gameOver = false;
@@ -250,8 +249,8 @@ if (destSprite != undefined && playerUnits.getIndex(destSprite) == -1
     }
 
     function initResourceCount() {
-        game.resources.lumber = 100;
-        game.resources.food = 100;
+        
+        game.resources = {lumber:STARTINGLUMBER, food:STARTINGFOOD};
         enemyLumber = 100;
         enemyFood = 100;
     }
