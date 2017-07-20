@@ -264,14 +264,14 @@ window.onload = function () {
         if (game.input.activePointer.isUp) {
             x = game.input.activePointer.position.x;
             y = game.input.activePointer.position.y;
-            if (x > CAMERA_WIDTH - TILE_LENGTH && y < CAMERA_HEIGHT - UI_HEIGHT) {
+            if (x > CAMERA_WIDTH - TILE_LENGTH && y < CAMERA_HEIGHT) {
                 game.camera.x += 10;
             }
-            else if (x < TILE_LENGTH && y < CAMERA_HEIGHT - UI_HEIGHT) {
+            else if (x < TILE_LENGTH && y < CAMERA_HEIGHT) {
                 game.camera.x -= 10;
             }
 
-            if (y > CAMERA_HEIGHT - UI_HEIGHT - TILE_LENGTH / 4 && y < CAMERA_HEIGHT - UI_HEIGHT * .5) {
+            if (y > CAMERA_HEIGHT - TILE_LENGTH / 4 && y < CAMERA_HEIGHT* .5) {
                 game.camera.y += 10;
             }
             else if (y < TILE_LENGTH) {
