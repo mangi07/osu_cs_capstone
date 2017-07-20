@@ -207,11 +207,11 @@ window.onload = function () {
       }
     }
 
-    // function render() {
+    function render() {
 
-    //     //game.debug.cameraInfo(game.camera, 32, 32);
-    //     //game.debug.pointer(game.input.mousePointer);
-    // }
+        //game.debug.cameraInfo(game.camera, 32, 32);
+        //game.debug.pointer(game.input.mousePointer);
+    }
 
     function stopUnit(unit, destSprite) {
         unit.body.velocity.y = 0;
