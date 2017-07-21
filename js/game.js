@@ -1,12 +1,16 @@
 window.onload = function () {
 
-    var CAMERA_WIDTH = 1536;
+    //var CAMERA_WIDTH = 1536;
+    var CAMERA_WIDTH = 1280;
     var CAMERA_HEIGHT = 768;
     var WORLD_WIDTH = 2048;
     var WORLD_HEIGHT = 2048;
     var TILE_LENGTH = 64;
-    var TILE_HEIGHT = 82
-    var UI_HEIGHT = 2 * TILE_LENGTH;
+    var TILE_HEIGHT = 82;
+    var POSITION_ADJUST = 4;
+    var VELOCITY = 200;
+
+    var UI_HEIGHT = 2 * TILE_LENGTH + TILE_LENGTH / 4;
     var mapGroup;
     var uiGroup;
     var gridCoordsGenerator = new GridCoordinatesGenerator(
@@ -27,7 +31,10 @@ window.onload = function () {
     var bgm;
     var selectedUnit;
     var unitcount2 = 0;
-
+    var enemyLumber;
+    var enemyFood;
+    var spawnX;
+    var spawnY;
 
     var game = new Phaser.Game(CAMERA_WIDTH, CAMERA_HEIGHT, Phaser.AUTO, '',
       { preload: preload, create: create, update: update, render: render });
@@ -45,6 +52,7 @@ window.onload = function () {
         createGroups();
         loadMap();
         createUnits();
+        initEnemyAI();
 
         game.input.onDown.add(moveUnit, this);
         loadUserInterface();
@@ -65,29 +73,67 @@ window.onload = function () {
         if (!gameOver) {
             updateCameraView();
             updateUIText();
+<<<<<<< HEAD
         }
         checkGameOver();
 
         for (i = 0; i < playerUnits.children.length; i++) {
             game.physics.arcade.overlap(playerUnits.children[i], game['destPoint' + playerUnits.children[i].name], stopUnit, null, this);
             game.physics.arcade.overlap(playerUnits.children[i], playerBase, healUnit, null, this);
+=======
+        for (var j = 0; j < mapGroup.children.length; j++) {
+            if (game.physics.arcade.overlap(playerUnits, mapGroup.children[j], collectResource, null, this) == false) {
+                mapGroup.children[j].alpha = 1;
+            }
+            game.physics.arcade.overlap(computerUnits, mapGroup.children[j], collectResource, null, this);
+        }
+        for (i = 0; i < playerUnits.children.length; i++) {
+            game.physics.arcade.overlap(playerUnits.children[i], game['destPoint' + playerUnits.children[i].name], stopUnit, null, this);
+            for (var j = 0; j < playerUnits.children.length; j++) {
+                game.physics.arcade.overlap(playerUnits.children[i], playerUnits.children[j], stopUnit, null, this);
+            }
+            game.physics.arcade.overlap(playerUnits.children[i], playerStructureGroup, healUnit, null, this);
+            game.physics.arcade.overlap(playerUnits.children[i], enemyStructureGroup, unitCombat, null, this);
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
         }
 
         for (i = 0; i < computerUnits.children.length; i++) {
             game.physics.arcade.overlap(computerUnits.children[i], game['destPoint' + computerUnits.children[i].name], stopUnit, null, this);
+            for (var j = 0; j < computerUnits.children.length; j++) {
+                game.physics.arcade.overlap(computerUnits.children[i], computerUnits.children[j], stopUnit, null, this);
+            }
+            game.physics.arcade.overlap(playerUnits.children[i], enemyStructureGroup, healUnit, null, this);
+            game.physics.arcade.overlap(computerUnits.children[i], playerStructureGroup, unitCombat, null, this);
         }
 
         for (var i = 0; i < playerUnits.children.length; i++) {
             for (var j = 0; j < computerUnits.children.length; j++) {
                 game.physics.arcade.overlap(playerUnits.children[i], computerUnits.children[j], unitCombat, null, this);
             }
+<<<<<<< HEAD
         }
 
         if (downKey.isDown) {
             spawnPlayerUnit();
+=======
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
         }
 
+        }
+        else {
+            playerUnits.forEach(function (unit) {
+                unit.body.velocity.x = 0;
+                unit.body.velocity.y = 0;
+            });
+            computerUnits.forEach(function (unit) {
+                unit.body.velocity.x = 0;
+                unit.body.velocity.y = 0;
+            });
+        }
+        checkGameOver();
+    }
 
+<<<<<<< HEAD
         if (upKey.isDown) {
             spawnEnemyUnit();
         }
@@ -115,6 +161,75 @@ window.onload = function () {
         }
 
         console.log(selectedUnit);
+=======
+    function collectResource(resource, unit) {
+            if (playerUnits.getIndex(unit) > -1)
+                resource.alpha = 0.6;
+            if (resource.collectFlag == true) {
+                //console.log(enemyLumber + " " + enemyFood);
+                game.time.events.add(5000, function(){
+                    if (resource.type == 'tree') {
+                        if (playerUnits.getIndex(unit) > -1)
+                            lumber += 10;
+                        else
+                            enemyLumber += 10;
+                    }
+                    else {
+                        if (playerUnits.getIndex(unit) > -1)
+                            food += 10;
+                        else
+                            enemyFood += 10;
+                    }
+                    resource.collectFlag = true;
+                }, this);
+                resource.collectFlag = false;
+            }
+    }
+
+    function moveUnit() {
+      if (!gameOver) {
+        if (this.game.input.activePointer.y > CAMERA_HEIGHT - UI_HEIGHT)
+            return;
+
+        for (i = 0; i < playerUnits.children.length; i++) {
+            if (Phaser.Rectangle.contains(playerUnits.children[i].body, this.game.input.activePointer.x + game.camera.x, this.game.input.activePointer.y + game.camera.y)) {
+                //console.log(playerUnits.children[i]);
+                selectedUnit = playerUnits.children[i];
+                //console.log(selectedUnit, playerUnits.children[i]);
+                return;
+            }
+        }
+/*
+        for (i = 0; i < computerUnits.children.length; i++) {
+            if (Phaser.Rectangle.contains(computerUnits.children[i].body, this.game.input.activePointer.x + game.camera.x, this.game.input.activePointer.y + game.camera.y)) {
+                //console.log(computerUnits.children[i]);
+                selectedUnit = computerUnits.children[i];
+                //console.log(selectedUnit, computerUnits.children[i]);
+                return;
+            }
+        }
+*/
+        //console.log(selectedUnit);
+/*
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
+        if (game['destPoint' + selectedUnit.name]) {
+            game['destPoint' + selectedUnit.name].kill();
+        }
+*/
+        game['destPoint' + selectedUnit.name] = game.add.sprite(this.game.input.activePointer.x + game.camera.x, this.game.input.activePointer.y + game.camera.y);
+
+        game['destPoint' + selectedUnit.name].enableBody = true;
+        game.physics.arcade.enable(game['destPoint' + selectedUnit.name]);
+<<<<<<< HEAD
+        game.physics.arcade.moveToObject(selectedUnit, game['destPoint' + selectedUnit.name], 60);
+=======
+        game.physics.arcade.moveToObject(selectedUnit, game['destPoint' + selectedUnit.name], VELOCITY);
+      }
+    }
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
+
+    function moveCompUnit() {
+      if (!gameOver) {
         if (game['destPoint' + selectedUnit.name]) {
             game['destPoint' + selectedUnit.name].kill();
         }
@@ -122,9 +237,10 @@ window.onload = function () {
 
         game['destPoint' + selectedUnit.name].enableBody = true;
         game.physics.arcade.enable(game['destPoint' + selectedUnit.name]);
-        game.physics.arcade.moveToObject(selectedUnit, game['destPoint' + selectedUnit.name], 60);
-
+        game.physics.arcade.moveToObject(selectedUnit, game['destPoint' + selectedUnit.name], VELOCITY);
+      }
     }
+
     function render() {
 
         //game.debug.cameraInfo(game.camera, 32, 32);
@@ -134,11 +250,23 @@ window.onload = function () {
     function stopUnit(unit, destSprite) {
         unit.body.velocity.y = 0;
         unit.body.velocity.x = 0;
+<<<<<<< HEAD
         destSprite.kill();
     }
 
     function healUnit(unit) {
         if (unit.HP < 1000000) {
+=======
+        if (destSprite != undefined && playerUnits.getIndex(destSprite) == -1
+            && computerUnits.getIndex(destSprite) == -1)
+            destSprite.kill();
+    }
+
+    function healUnit(unit) {
+        unit.body.velocity.x = 0;
+        unit.body.velocity.y = 0;
+        if (unit.HP < 100000) {
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
             unit.HP += 50;
             console.log(unit.HP);
         }
@@ -146,10 +274,11 @@ window.onload = function () {
     }
     function unitCombat(player, enemy) {
         stopUnit(player, game['destPoint' + player.name]);
-
-        stopUnit(enemy, game['destPoint' + enemy.name]);
+        if (computerUnits.getIndex(enemy) > -1) {
+            stopUnit(enemy, game['destPoint' + enemy.name]);
+        }
         var roll = Math.random();
-        console.log(roll);
+        //console.log(roll);
         if (roll > .5)
             player.HP = player.HP - 1000;
         else
@@ -164,8 +293,13 @@ window.onload = function () {
     function initResourceCount() {
         lumber = 100;
         food = 100;
+<<<<<<< HEAD
         resources.lumber = lumber;
         resources.food = food;
+=======
+        enemyLumber = 100;
+        enemyFood = 100;
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
     }
 
     function updateCameraView() {
@@ -175,6 +309,7 @@ window.onload = function () {
             x = game.input.activePointer.position.x;
             y = game.input.activePointer.position.y;
 
+<<<<<<< HEAD
             if (x > CAMERA_WIDTH - TILE_LENGTH && y < CAMERA_HEIGHT - UI_HEIGHT) {
                 game.camera.x += 10;
             }
@@ -188,6 +323,21 @@ window.onload = function () {
             else if (y < TILE_LENGTH) {
                 game.camera.y -= 10;
             }
+=======
+            if (x > CAMERA_WIDTH - TILE_LENGTH) {
+                game.camera.x += 10;
+            }
+            else if (x < TILE_LENGTH) {
+                game.camera.x -= 10;
+            }
+
+            if (y > CAMERA_HEIGHT - TILE_LENGTH / 4) {
+                game.camera.y += 10;
+            }
+            else if (y < TILE_LENGTH) {
+                game.camera.y -= 10;
+            }
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
         }
     }
 
@@ -195,20 +345,27 @@ window.onload = function () {
         mapGroup = game.add.group();
         playerStructureGroup = game.add.group();
         enemyStructureGroup = game.add.group();
+<<<<<<< HEAD
         addingStructureGroup = game.add.group();
         uiGroup = game.add.group();
         playerUnits = game.add.group();
         computerUnits = game.add.group();
+=======
+        playerUnits = game.add.group();
+        computerUnits = game.add.group();
+        uiGroup = game.add.group();
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
     }
 
     function loadSprites() {
         game.load.image('structure', 'assets/tiles/grass.png');
         game.load.image('tree', 'assets/tiles/tree.png');
-        game.load.image('berry', 'assets/tiles/berry.png');
+        game.load.image('cut-tree', 'assets/tiles/cut-tree.png');
+        game.load.image('berry', 'assets/tiles/berry-bush.png');
+        game.load.image('cut-berry', 'assets/tiles/cut-berry-bush.png');
         game.load.image('ui-background', 'assets/tiles/sky.png');
         game.load.image('sawmill', 'assets/structures/sawmill.png');
         game.load.image('dam', 'assets/structures/dam.png');
-        game.load.image('destPoint', 'assets/units/tree.png');
         game.load.image('beaver', 'assets/units/beaver.png');
         game.load.image('lumberjack', 'assets/units/lumberjack.png');
     }
@@ -223,6 +380,7 @@ window.onload = function () {
         var treeSparsityFactor = 10;
         var resourceSparsityFactor = 3;
         var treeFlag = true;
+        var secondClick = false;
 
         game.stage.backgroundColor = 0x22b14c;
         for (var j = 0; j < 100; j++) {
@@ -235,36 +393,84 @@ window.onload = function () {
                 if (treeFlag) {
                     tile = game.add.sprite(x, y, 'tree');
                     treeFlag = false;
+<<<<<<< HEAD
+=======
+                    tile.type = 'tree';
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
                 }
                 else {
                     tile = game.add.sprite(x, y, 'berry');
-                    tile.width = TILE_LENGTH / 2;
+                    tile.width = TILE_LENGTH;
                     tile.height = TILE_LENGTH;
                     treeFlag = true;
+<<<<<<< HEAD
+=======
+                    tile.type = 'berry';
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
                 }
             }
             else {
                 if (Math.floor(Math.random() * 2) != 0) {
                     tile = game.add.sprite(x, y, 'tree');
+<<<<<<< HEAD
                 }
                 else {
                     tile = game.add.sprite(x, y, 'berry');
                     tile.width = TILE_LENGTH / 2;
                     tile.height = TILE_LENGTH;
+=======
+                    tile.type = 'tree';
+                }
+                else {
+                    tile = game.add.sprite(x, y, 'berry');
+                    tile.width = TILE_LENGTH;
+                    tile.height = TILE_LENGTH;
+                    tile.type = 'berry';
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
                 }
             }
             tile.anchor.setTo(0, 0);
             mapGroup.add(tile);
             tile.inputEnabled = true;
             game.physics.arcade.enable(tile);
+<<<<<<< HEAD
 
+=======
+            tile.collectFlag = true;
+        }
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
             Structures.initStructures(
               gridCoordsGenerator,
               playerStructureGroup,
               enemyStructureGroup,
               game
             );
+<<<<<<< HEAD
         }
+=======
+	/*
+	borrowed from: http://www.andy-howard.com/how-to-double-click-in-phaser/index.html on 7/12/17
+*/
+        playerStructureGroup.forEach(function(structure) {
+            structure.events.onInputDown.add(function(itemBeingClicked) {
+                if (!secondClick) { 
+                    secondClick = true;
+                    game.time.events.add(300, function(){
+                        secondClick = false;
+                    }, this);
+                }
+                else {
+                    if (lumber > 0 && food > 0) {
+                        lumber -= 10;
+                        food -= 10;
+                        spawnX = structure.position.x - TILE_LENGTH;
+                        spawnY = structure.position.y - TILE_LENGTH;
+                        spawnPlayerUnit(spawnX, spawnY);
+                    }
+                }
+	    }, this);
+        });
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
     }
 
 
@@ -276,6 +482,7 @@ window.onload = function () {
         uiBackground.height = UI_HEIGHT;
         uiGroup.add(uiBackground);
 
+<<<<<<< HEAD
         addingStructureGroup.inputEnableChildren = true;
         var structureSprites = ["sawmill", "structure", "structure", "structure", "structure"]
         var x;
@@ -296,6 +503,12 @@ window.onload = function () {
               game
             );
 
+=======
+        for (var i = 1; i <= 5; i++) {
+            uiSprite = game.add.image(i * TILE_LENGTH + TILE_LENGTH / 2, CAMERA_HEIGHT - UI_HEIGHT + TILE_LENGTH + TILE_LENGTH / 2, 'structure');
+            uiSprite.anchor.setTo(0.5, 0.5);
+            uiGroup.add(uiSprite);
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
         }
 
         uiResourceText = game.add.text(TILE_LENGTH + 5, CAMERA_HEIGHT - UI_HEIGHT + 5, "Lumber: " + lumber + "   Food: " + food);
@@ -316,7 +529,11 @@ window.onload = function () {
 
     function updateUIText() {
         //console.log(selectedUnit);
+<<<<<<< HEAD
         uiResourceText.setText("Lumber: " + resources.lumber + "   Food: " + resources.food);
+=======
+        uiResourceText.setText("Lumber: " + lumber + "   Food: " + food);
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
         uiUnitText.setText("Selected Unit: " + (selectedUnit && selectedUnit.type ? selectedUnit.type : "None") + "\nHitPoints: " + selectedUnit.HP);
         uiSelectedUnit.loadTexture(selectedUnit.key, 0, false);
         uiSelectedUnit.width = UI_HEIGHT;
@@ -342,6 +559,7 @@ window.onload = function () {
     }
 
     function createUnits() {
+<<<<<<< HEAD
         playerUnit1 = playerUnits.create(770, game.world.height - 1550, 'beaver');
         playerUnit2 = playerUnits.create(32, game.world.height - 1550, 'beaver');
         lumber1 = computerUnits.create(732, game.world.height - 1955, 'lumberjack');
@@ -350,18 +568,28 @@ window.onload = function () {
         enemyBase = enemyStructureGroup.create(55, game.world.height - 1955, 'sawmill');
         playerUnit1.HP = 1000000;
         playerUnit1.type = "Beaver"
+=======
+        var playerUnitX = playerStructureGroup.getTop().position.x;
+        var playerUnitY = playerStructureGroup.getTop().position.y;
+        var computerUnitX = enemyStructureGroup.getTop().position.x;
+        var computerUnitY = enemyStructureGroup.getTop().position.y;
+        playerUnit1 = playerUnits.create(playerUnitX, playerUnitY+TILE_LENGTH, 'lumberjack');
+        playerUnit2 = playerUnits.create(playerUnitX, playerUnitY-TILE_LENGTH, 'lumberjack');
+        lumber1 = computerUnits.create(computerUnitX, computerUnitY+TILE_LENGTH, 'beaver');
+        lumber2 = computerUnits.create(computerUnitX, computerUnitY-TILE_LENGTH, 'beaver');
+        playerUnit1.HP = 100000;
+        playerUnit1.type = "Lumber Jack"
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
         playerUnit1.name = "playerunit1";
-        playerUnit2.HP = 1000000;
-        playerUnit2.type = "Beaver"
+        playerUnit2.HP = 100000;
+        playerUnit2.type = "Lumber Jack"
         playerUnit2.name = "playerunit2";
-        lumber1.type = "Lumber Jack";
-        lumber2.type = "Lumber Jack";
+        lumber1.type = "Beaver";
+        lumber2.type = "Beaver";
         lumber1.name = "lumber1";
         lumber2.name = "lumber2";
-        lumber1.HP = 1000000;
-        lumber2.HP = 1000000;
-        game.physics.arcade.enable(playerBase);
-        game.physics.arcade.enable(enemyBase);
+        lumber1.HP = 100000;
+        lumber2.HP = 100000;
         playerUnit1.width = 40;
         playerUnit1.height = 40;
         playerUnit2.width = 40;
@@ -376,15 +604,26 @@ window.onload = function () {
         game.physics.arcade.enable(lumber1);
         game.physics.arcade.enable(lumber2);
         unitCount = 2;
+<<<<<<< HEAD
         selectedUnit = lumber2;
     }
 
     function spawnPlayerUnit() {
         playerUnit = playerUnits.create(330, game.world.height - (1550 + (unitCount * 50)), 'beaver');
         playerUnit.Name = "playerUnit" + unitCount;
+=======
+        selectedUnit = playerUnit1;
+    }
+
+    function spawnPlayerUnit(x, y) {
+        var playerUnit = playerUnits.create(x, y, 'lumberjack');
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
         playerUnit.width = 40;
         playerUnit.height = 40;
-        playerUnit.HP = 1000000;
+        playerUnit.anchor.setTo(0, 0);
+
+        playerUnit.Name = "playerUnit" + unitCount;
+        playerUnit.HP = 100000;
         game.physics.arcade.enable(playerUnit);
         playerUnit.enableBody = true;
         unitCount += 1;
@@ -392,13 +631,54 @@ window.onload = function () {
     }
 
     function spawnEnemyUnit() {
+<<<<<<< HEAD
         enemyUnit = computerUnits.create(530, game.world.height - (1550 + (unitcount2 * 50)), 'lumberjack');
+=======
+        enemyUnit = computerUnits.create(530, game.world.height - (1550 + (unitcount2 * 50)), 'beaver');
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
         enemyUnit.Name = "enemyUnit" + unitcount2;
         enemyUnit.width = 40;
         enemyUnit.height = 40;
         game.physics.arcade.enable(enemyUnit);
         enemyUnit.enableBody = true;
+<<<<<<< HEAD
         enemyUnit.HP = 1000000;
         unitcount2++;
     }
+=======
+        enemyUnit.HP = 100000;
+        unitcount2++;
+    }
+
+    function initEnemyAI() {
+        var minDistance = 1000000;
+        var tempDistance;
+        var closestResource;
+        var compUnit1 = computerUnits.getTop();
+        var compUnit2 = computerUnits.getBottom();
+            mapGroup.forEach(function(resource) {
+                tempDistance = Phaser.Math.distance(compUnit1.body.position.x,
+                               compUnit1.body.position.y,
+                               resource.body.position.x,
+                               resource.body.position.y);
+                if (tempDistance < minDistance && resource.type == 'tree') {
+                    minDistance = tempDistance;
+                    closestResource = resource;
+                }
+            });
+        minDistance = 1000000;
+        //game.physics.arcade.moveToObject(compUnit2, closestResource, VELOCITY);
+            mapGroup.forEach(function(resource) {
+                tempDistance = Phaser.Math.distance(compUnit2.body.position.x,
+                               compUnit2.body.position.y,
+                               resource.body.position.x,
+                               resource.body.position.y);
+                if (tempDistance < minDistance && resource.type == 'berry') {
+                    minDistance = tempDistance;
+                    closestResource = resource;
+                }
+            });
+        //game.physics.arcade.moveToObject(compUnit1, closestResource, VELOCITY);
+    }
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
 };

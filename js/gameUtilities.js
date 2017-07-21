@@ -132,7 +132,7 @@ function GridCoordinatesGenerator(gameWidth, gameHeight, tileWidth, tileHeight){
 		} else if( area == WHOLE_MAP ) {
 			index = Math.floor(Math.random() * tileArray.length);
 			rightIndex--;
-			console.log(index);
+			//console.log(index);
 		}
 	}
 

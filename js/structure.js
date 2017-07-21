@@ -31,7 +31,7 @@ var Structures = {
 		//GameUtilities.randomReplaceTilesWithKey(mapGroup, "grass", "sawmill", 1.2, 0); // tile map version
 		//GameUtilities.randomReplaceTilesWithKey(mapGroup, "grass", "dam", 1.2, 1); // tile map version
 
-		for ( var i = 200; i < coordsGenerator.tilesRemainingLeftThird(); i++ ) {
+		for ( var i = 0; i < 1; i++ ) {
 			var coords = coordsGenerator.getCoords(1);
 			var x = coords[0];
 			var y = coords[1];
@@ -40,12 +40,17 @@ var Structures = {
 			playerStructure.anchor.setTo(0, 0);
 			playerGroup.add(playerStructure);
 			playerStructure.inputEnabled = true;
+<<<<<<< HEAD
 			game.physics.arcade.enable(playerStructure);
+=======
+                        game.physics.arcade.enable(playerStructure);
+			playerStructure.HP = 10000;
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
 
 		}
 		
 
-		for ( var i = 200; i < coordsGenerator.tilesRemainingRightThird(); i++ ) {
+		for ( var i = 0; i < 1; i++ ) {
 			var coords = coordsGenerator.getCoords(2);
 			var x = coords[0];
 			var y = coords[1];
@@ -54,7 +59,12 @@ var Structures = {
 			enemyStructure.anchor.setTo(0, 0);
 			enemyGroup.add(enemyStructure);
 			enemyStructure.inputEnabled = true;
+<<<<<<< HEAD
 			game.physics.arcade.enable(enemyStructure);
+=======
+                        game.physics.arcade.enable(enemyStructure);
+			enemyStructure.HP = 10000;
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
 
 		}
 
@@ -131,6 +141,7 @@ var Structures = {
 		        console.log('input disabled on', sprite.key);
 		        sprite.inputEnabled = false;
 
+<<<<<<< HEAD
 		        sprite.sendToBack();  // We want this for the game map, I think - if it's not sending behind everything and then not visible
 
 		        uiGroup.remove(selectedStructure); // to remove from ui group so dragging is not checked on this sprite
@@ -191,3 +202,6 @@ var Structures = {
 		}
 	}
 }
+=======
+}
+>>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
