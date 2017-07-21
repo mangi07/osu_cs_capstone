@@ -40,8 +40,12 @@ var Structures = {
 			playerStructure.anchor.setTo(0, 0);
 			playerGroup.add(playerStructure);
 			playerStructure.inputEnabled = true;
+                        game.physics.arcade.enable(playerStructure);
+			playerStructure.HP = 10000;
+
       game.physics.arcade.enable(playerStructure);
 			playerStructure.HP = 10000;
+
 
 		}
 		
@@ -191,5 +195,4 @@ var Structures = {
 		    // 0xFFFFFF removes any tint
 		}
 	}
-
 }
