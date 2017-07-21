@@ -1,0 +1,3 @@
+need to combine commit 'ee387a27' from head
+
+with latest commit on branch midpoint
