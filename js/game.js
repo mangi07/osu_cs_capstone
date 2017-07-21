@@ -100,7 +100,7 @@ window.onload = function () {
                 game.physics.arcade.overlap(playerUnits.children[i], computerUnits.children[j], unitCombat, null, this);
             }
         }
-
+        //console.log("Enemy Resources - Lumber: " + enemyLumber + " Food: " + enemyFood);
         }
         else {
             playerUnits.forEach(function (unit) {
@@ -176,16 +176,16 @@ window.onload = function () {
       }
     }
 
-    function moveCompUnit() {
+    function moveCompUnit(unit, x, y) {
       if (!gameOver) {
-        if (game['destPoint' + selectedUnit.name]) {
-            game['destPoint' + selectedUnit.name].kill();
+        if (game['destPoint' + unit.name]) {
+            game['destPoint' + unit.name].kill();
         }
-        game['destPoint' + selectedUnit.name] = game.add.sprite(this.game.input.activePointer.x + game.camera.x, this.game.input.activePointer.y + game.camera.y);
+        game['destPoint' + unit.name] = game.add.sprite(x, y);
 
-        game['destPoint' + selectedUnit.name].enableBody = true;
-        game.physics.arcade.enable(game['destPoint' + selectedUnit.name]);
-        game.physics.arcade.moveToObject(selectedUnit, game['destPoint' + selectedUnit.name], VELOCITY);
+        game['destPoint' + unit.name].enableBody = true;
+        game.physics.arcade.enable(game['destPoint' + unit.name]);
+        game.physics.arcade.moveToObject(unit, game['destPoint' + unit.name], VELOCITY);
       }
     }
 
@@ -198,9 +198,25 @@ window.onload = function () {
     function stopUnit(unit, destSprite) {
         unit.body.velocity.y = 0;
         unit.body.velocity.x = 0;
-        if (destSprite != undefined && playerUnits.getIndex(destSprite) == -1
-            && computerUnits.getIndex(destSprite) == -1)
-            destSprite.kill();
+        if (destSprite != undefined) {
+            if (playerUnits.getIndex(destSprite) == -1 &&
+                computerUnits.getIndex(destSprite) == -1) {
+                destSprite.kill();
+            }
+            else {
+                if (destSprite.body.velocity.x == 0 &&
+                    destSprite.body.velocity.y == 0) {
+                    if (unit.body.position.y < destSprite.body.position.y) {
+                        unit.body.position.y -= TILE_LENGTH/8;
+                        destSprite.body.position.y += TILE_LENGTH/8;
+                    }
+                    else {
+                        unit.body.position.y += TILE_LENGTH/8;
+                        destSprite.body.position.y -= TILE_LENGTH/8;
+                    }
+                }
+            }
+        }
     }
 
     function healUnit(unit) {
@@ -425,15 +441,15 @@ window.onload = function () {
         var playerUnitY = playerStructureGroup.getTop().position.y;
         var computerUnitX = enemyStructureGroup.getTop().position.x;
         var computerUnitY = enemyStructureGroup.getTop().position.y;
-        playerUnit1 = playerUnits.create(playerUnitX, playerUnitY+TILE_LENGTH, 'lumberjack');
-        playerUnit2 = playerUnits.create(playerUnitX, playerUnitY-TILE_LENGTH, 'lumberjack');
-        lumber1 = computerUnits.create(computerUnitX, computerUnitY+TILE_LENGTH, 'beaver');
-        lumber2 = computerUnits.create(computerUnitX, computerUnitY-TILE_LENGTH, 'beaver');
+        playerUnit1 = playerUnits.create(playerUnitX, playerUnitY+2*TILE_LENGTH, 'lumberjack');
+        playerUnit2 = playerUnits.create(playerUnitX, playerUnitY-2*TILE_LENGTH, 'lumberjack');
+        lumber1 = computerUnits.create(computerUnitX, computerUnitY+2*TILE_LENGTH, 'beaver');
+        lumber2 = computerUnits.create(computerUnitX, computerUnitY-2*TILE_LENGTH, 'beaver');
         playerUnit1.HP = 100000;
-        playerUnit1.type = "Lumber Jack"
+        playerUnit1.type = "Lumber Jack";
         playerUnit1.name = "playerunit1";
         playerUnit2.HP = 100000;
-        playerUnit2.type = "Lumber Jack"
+        playerUnit2.type = "Lumber Jack";
         playerUnit2.name = "playerunit2";
         lumber1.type = "Beaver";
         lumber2.type = "Beaver";
@@ -472,8 +488,8 @@ window.onload = function () {
         console.log("spawned unit");
     }
 
-    function spawnEnemyUnit() {
-        enemyUnit = computerUnits.create(530, game.world.height - (1550 + (unitcount2 * 50)), 'beaver');
+    function spawnEnemyUnit(x, y) {
+        enemyUnit = computerUnits.create(x, y, 'beaver');
         enemyUnit.Name = "enemyUnit" + unitcount2;
         enemyUnit.width = 40;
         enemyUnit.height = 40;
@@ -494,23 +510,29 @@ window.onload = function () {
                                compUnit1.body.position.y,
                                resource.body.position.x,
                                resource.body.position.y);
-                if (tempDistance < minDistance && resource.type == 'tree') {
+                if (tempDistance < minDistance &&
+                    resource.body.position.x > compUnit1.body.position.x &&
+                    resource.type == 'tree') {
                     minDistance = tempDistance;
                     closestResource = resource;
                 }
             });
+        moveCompUnit(compUnit2, closestResource.body.position.x, closestResource.body.position.y);
         minDistance = 1000000;
-        //game.physics.arcade.moveToObject(compUnit2, closestResource, VELOCITY);
             mapGroup.forEach(function(resource) {
                 tempDistance = Phaser.Math.distance(compUnit2.body.position.x,
                                compUnit2.body.position.y,
                                resource.body.position.x,
                                resource.body.position.y);
-                if (tempDistance < minDistance && resource.type == 'berry') {
+                if (tempDistance < minDistance &&
+                    resource.body.position.x < compUnit2.body.position.x &&
+                    resource.type == 'berry') {
                     minDistance = tempDistance;
                     closestResource = resource;
                 }
             });
-        //game.physics.arcade.moveToObject(compUnit1, closestResource, VELOCITY);
+        moveCompUnit(compUnit1, closestResource.body.position.x, closestResource.body.position.y);
+        var compStruct1 = enemyStructureGroup.getTop();
+        spawnEnemyUnit(compStruct1.position.x - TILE_LENGTH, compStruct1.position.y - TILE_LENGTH);
     }
 };
