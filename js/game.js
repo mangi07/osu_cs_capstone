@@ -15,7 +15,7 @@ window.onload = function () {
     var mapGroup;
     var uiGroup;
     var gridCoordsGenerator = new GridCoordinatesGenerator(
-      WORLD_WIDTH, WORLD_HEIGHT, TILE_LENGTH, TILE_HEIGHT
+      WORLD_WIDTH, WORLD_HEIGHT - UI_HEIGHT, TILE_LENGTH, TILE_HEIGHT
     );
     var playerStructureGroup;
     var enemyStructureGroup;
@@ -107,6 +107,8 @@ window.onload = function () {
                 game.physics.arcade.overlap(playerUnits.children[i], computerUnits.children[j], unitCombat, null, this);
             }
         }
+        // when placing a resource and dragging over a sprite it should not overlap, tint the dragged resource red
+        Structures.update(uiGroup, playerStructureGroup, enemyStructureGroup, mapGroup, game);
         }
         else {
             playerUnits.forEach(function (unit) {
@@ -159,24 +161,10 @@ window.onload = function () {
                 return;
             }
         }
-/*
-        for (i = 0; i < computerUnits.children.length; i++) {
-            if (Phaser.Rectangle.contains(computerUnits.children[i].body, this.game.input.activePointer.x + game.camera.x, this.game.input.activePointer.y + game.camera.y)) {
-                //console.log(computerUnits.children[i]);
-                selectedUnit = computerUnits.children[i];
-                //console.log(selectedUnit, computerUnits.children[i]);
-                return;
-            }
-        }
-*/
+
+
+
         //console.log(selectedUnit);
-
-
-        // when placing a resource and dragging over a sprite it should not overlap, tint the dragged resource red
-        Structures.update(uiGroup, playerStructureGroup, enemyStructureGroup, mapGroup, game);
-
-
-        console.log(selectedUnit);
 
         if (game['destPoint' + selectedUnit.name]) {
             game['destPoint' + selectedUnit.name].kill();
@@ -236,12 +224,10 @@ window.onload = function () {
         unit.body.velocity.x = 0;
         unit.body.velocity.y = 0;
         if (unit.HP < 100000) {
-
-        destSprite.kill();
-    }
             unit.HP += 50;
-            console.log(unit.HP);
         }
+            //console.log(unit.HP);
+    }
         
     
     function unitCombat(player, enemy) {
@@ -275,14 +261,14 @@ window.onload = function () {
         if (game.input.activePointer.isUp) {
             x = game.input.activePointer.position.x;
             y = game.input.activePointer.position.y;
-            if (x > CAMERA_WIDTH - TILE_LENGTH && y < CAMERA_HEIGHT - TILE_LENGTH) {
+            if (x > CAMERA_WIDTH - TILE_LENGTH) {
                 game.camera.x += 10;
             }
-            else if (x < TILE_LENGTH && y < CAMERA_HEIGHT - TILE_LENGTH) {
+            else if (x < TILE_LENGTH) {
                 game.camera.x -= 10;
             }
 
-            if (y > CAMERA_HEIGHT - TILE_LENGTH - TILE_LENGTH / 4 && y < CAMERA_HEIGHT - TILE_LENGTH * .5) {
+            if (y > CAMERA_HEIGHT - TILE_LENGTH / 4) {
                 game.camera.y += 10;
             }
             else if (y < TILE_LENGTH) {
@@ -475,8 +461,24 @@ window.onload = function () {
         var playerUnitY = playerStructureGroup.getTop().position.y;
         var computerUnitX = enemyStructureGroup.getTop().position.x;
         var computerUnitY = enemyStructureGroup.getTop().position.y;
-        playerUnit1 = playerUnits.create(playerUnitX, playerUnitY+2*TILE_LENGTH, 'lumberjack');
-        playerUnit2 = playerUnits.create(playerUnitX, playerUnitY-2*TILE_LENGTH, 'lumberjack');
+        if (playerUnitY + 2 * TILE_LENGTH < WORLD_HEIGHT - UI_HEIGHT) {
+            playerUnit1 = playerUnits.create(playerUnitX, playerUnitY+2*TILE_LENGTH, 'lumberjack');
+        }
+        else if (playerUnitX + 2 * TILE_LENGTH < WORLD_WIDTH) {
+            playerUnit1 = playerUnits.create(playerUnitX+2*TILE_LENGTH, playerUnitY, 'lumberjack');
+        }
+        else if (playerUnitX - 2 * TILE_LENGTH > 0) {
+            playerUnit1 = playerUnits.create(playerUnitX-2*TILE_LENGTH, playerUnitY, 'lumberjack');
+        }
+        if (playerUnitY - 2 * TILE_LENGTH > 0) {
+            playerUnit2 = playerUnits.create(playerUnitX, playerUnitY-2*TILE_LENGTH, 'lumberjack');
+        }
+        else if (playerUnitX - 2 * TILE_LENGTH > 0) {
+            playerUnit2 = playerUnits.create(playerUnitX-2*TILE_LENGTH, playerUnitY, 'lumberjack');
+        }
+        else if (playerUnitX + 2 * TILE_LENGTH > WORLD_WIDTH) {
+            playerUnit2 = playerUnits.create(playerUnitX+2*TILE_LENGTH, playerUnitY, 'lumberjack');
+        }
         lumber1 = computerUnits.create(computerUnitX, computerUnitY+2*TILE_LENGTH, 'beaver');
         lumber2 = computerUnits.create(computerUnitX, computerUnitY-2*TILE_LENGTH, 'beaver');
         playerUnit1.HP = 100000;

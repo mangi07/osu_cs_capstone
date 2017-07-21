@@ -126,7 +126,7 @@ var Structures = {
 
 		function onDragStop(sprite, pointer) {
 
-		    console.log(sprite.key + " dropped at x:" + pointer.x + " y: " + pointer.y);
+//		    console.log(sprite.key + " dropped at x:" + pointer.x + " y: " + pointer.y);
 
 		    if (!game.physics.arcade.overlap(selectedStructure, playerStructureGroup) &&
 		    	!game.physics.arcade.overlap(selectedStructure, enemyStructureGroup) &&
@@ -134,7 +134,7 @@ var Structures = {
 		    // the structure will stay on the map, 
 		    // resource points get deducted, and replacement sprite will pop up in the ui at the bottom.
 		    {
-		        console.log('input disabled on', sprite.key);
+//		        console.log('input disabled on', sprite.key);
 		        sprite.inputEnabled = false;
 		        sprite.sendToBack();  // We want this for the game map, I think - if it's not sending behind everything and then not visible
 
@@ -165,7 +165,7 @@ var Structures = {
 		    else
 		        // end up back in the ui at the bottom (not get placed on map)
 		    {
-		        console.log("NOT PLACING NEW STRUCTURE");
+//		        console.log("NOT PLACING NEW STRUCTURE");
 
 		        sprite.position.x = originX;
 		        sprite.position.y = originY;
@@ -181,7 +181,7 @@ var Structures = {
 	update: function(addingStructureGroup, playerStructureGroup, enemyStructureGroup, mapGroup, game){
 	    // test collision with object
 	    var addingStructure;
-			console.log(game);
+//			console.log(game);
 	    for (var i = 0; i < addingStructureGroup.length; i++){
 	    	addingStructure = addingStructureGroup.children[i];
 	    	if ( ! game.physics.arcade.overlap(addingStructure, playerStructureGroup, overlapCallback) &&
