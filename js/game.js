@@ -75,8 +75,10 @@ window.onload = function () {
 
     function update() {
         if (!gameOver) {
-            updateCameraView();
-            updateUIText();
+          updateCameraView();
+          updateUIText();
+        }
+
 
         for (var j = 0; j < mapGroup.children.length; j++) {
             if (game.physics.arcade.overlap(playerUnits, mapGroup.children[j], collectResource, null, this) == false) {
