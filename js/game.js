@@ -109,7 +109,14 @@ window.onload = function () {
         if (!gameOver) {
             updateCameraView();
             updateUIText();
-
+if (upKey.isDown)
+    {
+        save();
+    }
+        else if (downKey.isDown)
+    {
+        load(game);
+    }
             for (var j = 0; j < mapGroup.children.length; j++) {
                 if (game.physics.arcade.overlap(playerUnits, mapGroup.children[j], collectResource, null, this) == false) {
                     mapGroup.children[j].alpha = 1;
@@ -281,8 +288,8 @@ window.onload = function () {
     function healUnit(unit) {
         unit.body.velocity.x = 0;
         unit.body.velocity.y = 0;
-        if (unit.HP < unit.Max_HP9) {
-            unit.HP += 50;
+        if (unit.HP < unit.Max_HP) {
+            unit.HP += Math.min(1, unit.Max_HP - unit.HP);
         }
         //console.log(unit.HP);
     }
@@ -655,6 +662,4 @@ window.onload = function () {
         };
         xobj.send(null);
     }
-
-
 };
