@@ -119,6 +119,7 @@ window.onload = function () {
                 unit.body.velocity.x = 0;
                 unit.body.velocity.y = 0;
             });
+            Structures.disableStructureCreation(uiGroup);
         }
         checkGameOver();
     }
@@ -352,11 +353,23 @@ window.onload = function () {
             game.physics.arcade.enable(tile);
             tile.collectFlag = true;
         }
-
+/*
             Structures.initStructures(
               gridCoordsGenerator,
               playerStructureGroup,
               enemyStructureGroup,
+              game
+            );
+*/
+            // This leaves us the option to initialize more structures if later we decide we want to.
+            Structures.initStructures(
+              gridCoordsGenerator, 1, 1,
+              playerStructureGroup, "sawmill",
+              game
+            );
+            Structures.initStructures(
+              gridCoordsGenerator, 2, 1,
+              enemyStructureGroup, "dam",
               game
             );
 	/*
