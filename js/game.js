@@ -31,11 +31,14 @@ window.onload = function () {
     var gameOver;
     var bgm;
     var selectedUnit;
+    var unitCount;
     var unitcount2 = 0;
     var enemyLumber;
     var enemyFood;
     var spawnX;
     var spawnY;
+    var spawnFlag;
+    var currStructCount;
 
     var game = new Phaser.Game(CAMERA_WIDTH, CAMERA_HEIGHT, Phaser.AUTO, '',
       { preload: preload, create: create, update: update, render: render });
@@ -54,18 +57,18 @@ window.onload = function () {
         initResourceCount();
         
         loadUserInterface();
-        
+        unitCount = 0;
         createUnits();
-        initEnemyAI();
+        spawnUnitAI();
+        collectResourcesAI();
+        attackAI();
         game.input.onDown.add(moveUnit, this);
         gameOver = false;
 
         game.sound.setDecodedCallback([bgm], start, this);
 
-        downKey = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
-
-        upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
-
+        currStructCount = 1;
+        spawnFlag = true;
     }
 
     function start() {
@@ -109,6 +112,9 @@ window.onload = function () {
         }
         // when placing a resource and dragging over a sprite it should not overlap, tint the dragged resource red
         Structures.update(uiGroup, playerStructureGroup, enemyStructureGroup, mapGroup, game);
+        if (spawnFlag) {
+            spawnFlag = false;
+        }
         }
         else {
             playerUnits.forEach(function (unit) {
@@ -169,6 +175,7 @@ window.onload = function () {
         if (game['destPoint' + selectedUnit.name]) {
             game['destPoint' + selectedUnit.name].kill();
         }
+
         game['destPoint' + selectedUnit.name] = game.add.sprite(this.game.input.activePointer.x + game.camera.x, this.game.input.activePointer.y + game.camera.y);
 
         game['destPoint' + selectedUnit.name].enableBody = true;
@@ -363,19 +370,27 @@ window.onload = function () {
 	borrowed from: http://www.andy-howard.com/how-to-double-click-in-phaser/index.html on 7/12/17
 */
         playerStructureGroup.forEach(function(structure) {
+            structure.secondClick = false;
             structure.events.onInputDown.add(function(itemBeingClicked) {
-                if (!secondClick) { 
-                    secondClick = true;
+                if (!structure.secondClick) { 
+                    structure.secondClick = true;
                     game.time.events.add(300, function(){
-                        secondClick = false;
+                        structure.secondClick = false;
                     }, this);
                 }
                 else {
-                    if (game.resources.lumber > 0 && game.resources.food > 0) {
+                    structure.secondClick = false;
+                    if (game.resources.lumber > 10 && game.resources.food > 10) {
                         game.resources.lumber -= 10;
                         game.resources.food -= 10;
-                        spawnX = structure.position.x - TILE_LENGTH;
-                        spawnY = structure.position.y - TILE_LENGTH;
+                        if (structure.position.x - TILE_LENGTH > 0)
+                            spawnX = structure.position.x - TILE_LENGTH;
+                        else
+                            spawnX = structure.position.x + 2*TILE_LENGTH;
+                        if (structure.position.y - TILE_LENGTH > 0)
+                            spawnY = structure.position.y - TILE_LENGTH;
+                        else
+                            spawnY = structure.position.y + 2*TILE_LENGTH;
                         spawnPlayerUnit(spawnX, spawnY);
                     }
                 }
@@ -394,11 +409,11 @@ window.onload = function () {
         addingStructureGroup.inputEnableChildren = true;
         var structureSprites = ["sawmill", "structure", "structure", "structure", "structure"]
         var x;
-        var y = CAMERA_HEIGHT - UI_HEIGHT + TILE_LENGTH + TILE_LENGTH / 2;
+        var y = CAMERA_HEIGHT - UI_HEIGHT + TILE_LENGTH;
         for (var i = 1; i <= structureSprites.length; i++) {
             x = i * TILE_LENGTH + TILE_LENGTH / 2;
             uiSprite = game.add.sprite(x, y, structureSprites[i-1]);
-            uiSprite.anchor.setTo(0.5, 0.5);
+            uiSprite.anchor.setTo(0, 0);
             uiGroup.add(uiSprite);
 
             Structures.enableStructureCreation(
@@ -408,6 +423,8 @@ window.onload = function () {
               enemyStructureGroup,
               mapGroup, 
               resources,
+              playerUnits,
+              unitCount,
               game
             );
         }
@@ -507,6 +524,7 @@ window.onload = function () {
         game.physics.arcade.enable(lumber1);
         game.physics.arcade.enable(lumber2);
         unitCount = 2;
+        unitcount2 = 2;
         selectedUnit = playerUnit1;
     }
 
@@ -536,40 +554,31 @@ window.onload = function () {
         unitcount2++;
     }
 
-    function initEnemyAI() {
-        var minDistance = 1000000;
-        var tempDistance;
+    function collectResourcesAI() {
         var closestResource;
-        var compUnit1 = computerUnits.getTop();
-        var compUnit2 = computerUnits.getBottom();
-            mapGroup.forEach(function(resource) {
-                tempDistance = Phaser.Math.distance(compUnit1.body.position.x,
-                               compUnit1.body.position.y,
-                               resource.body.position.x,
-                               resource.body.position.y);
-                if (tempDistance < minDistance &&
-                    resource.body.position.x > compUnit1.body.position.x &&
-                    resource.type == 'tree') {
-                    minDistance = tempDistance;
-                    closestResource = resource;
-                }
-            });
-        moveCompUnit(compUnit2, closestResource.body.position.x, closestResource.body.position.y);
-        minDistance = 1000000;
-            mapGroup.forEach(function(resource) {
-                tempDistance = Phaser.Math.distance(compUnit2.body.position.x,
-                               compUnit2.body.position.y,
-                               resource.body.position.x,
-                               resource.body.position.y);
-                if (tempDistance < minDistance &&
-                    resource.body.position.x < compUnit2.body.position.x &&
-                    resource.type == 'berry') {
-                    minDistance = tempDistance;
-                    closestResource = resource;
-                }
-            });
+        var compUnit1 = computerUnits.getChildAt(0);
+        var compUnit2 = computerUnits.getChildAt(1);
+        closestResource = mapGroup.getClosestTo(enemyStructureGroup.getTop(), function(resource){return resource.type == 'tree';});
         moveCompUnit(compUnit1, closestResource.body.position.x, closestResource.body.position.y);
+        closestResource = mapGroup.getClosestTo(enemyStructureGroup.getTop(), function(resource){return resource.type == 'berry';});
+        moveCompUnit(compUnit2, closestResource.body.position.x, closestResource.body.position.y);
+        game.time.events.add(1000, collectResourcesAI, this);
+    }
+
+    function spawnUnitAI() {
         var compStruct1 = enemyStructureGroup.getTop();
-        spawnEnemyUnit(compStruct1.position.x - TILE_LENGTH, compStruct1.position.y - TILE_LENGTH);
+        if (enemyLumber > 10 && enemyFood > 10) {
+            spawnEnemyUnit(compStruct1.position.x - TILE_LENGTH, compStruct1.position.y - TILE_LENGTH);
+            enemyLumber -= 10;
+            enemyFood -= 10;
+        }
+        game.time.events.add(10000, spawnUnitAI, this);
+    }
+
+    function attackAI() {
+        if (unitcount2 > 3) {
+                moveCompUnit(computerUnits.getTop(), playerStructureGroup.getTop().body.position.x, playerStructureGroup.getTop().body.position.y);
+        }
+        game.time.events.add(1000, attackAI, this);
     }
 };
