@@ -211,7 +211,7 @@ window.onload = function () {
         if (destSprite != undefined) {
             if (playerUnits.getIndex(destSprite) == -1 &&
                 computerUnits.getIndex(destSprite) == -1) {
-                destSprite.kill();
+                destSprite.destroy();
             }
             else {
                 if (destSprite.body.velocity.x == 0 &&
@@ -240,7 +240,9 @@ window.onload = function () {
         
     
     function unitCombat(player, enemy) {
-        stopUnit(player, game['destPoint' + player.name]);
+        if (playerUnits.getIndex(player) > -1) {
+            stopUnit(player, game['destPoint' + player.name]);
+        }
         if (computerUnits.getIndex(enemy) > -1) {
             stopUnit(enemy, game['destPoint' + enemy.name]);
         }
@@ -252,9 +254,9 @@ window.onload = function () {
             enemy.HP = enemy.HP - 1000;
         console.log(player.HP, enemy.HP);
         if (player.HP < 0)
-            player.kill();
+            player.destroy();
         if (enemy.HP < 0)
-            enemy.kill();
+            enemy.destroy();
     }
 
     function initResourceCount() {
@@ -557,6 +559,7 @@ window.onload = function () {
     }
 
     function collectResourcesAI() {
+      if (computerUnits.countLiving() > 1) {
         var closestResource;
         var compUnit1 = computerUnits.getChildAt(0);
         var compUnit2 = computerUnits.getChildAt(1);
@@ -567,6 +570,7 @@ window.onload = function () {
         compCollectUnit1 = compUnit1;
         compCollectUnit2 = compUnit2;
         game.time.events.add(1000, collectResourcesAI, this);
+      }
     }
 
     function spawnUnitAI() {
@@ -576,11 +580,11 @@ window.onload = function () {
             enemyLumber -= 10;
             enemyFood -= 10;
         }
-        game.time.events.add(10000, spawnUnitAI, this);
+        game.time.events.add(20000, spawnUnitAI, this);
     }
 
     function attackAI() {
-        if (unitcount2 > 4) {
+        if (computerUnits.countLiving() > 4) {
             computerUnits.forEachAlive(function(unit) {
                 if (unit != compCollectUnit1 && unit != compCollectUnit2) {
                     moveCompUnit(unit, playerStructureGroup.getTop().body.position.x,
