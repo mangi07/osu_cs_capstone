@@ -39,6 +39,8 @@ window.onload = function () {
     var spawnY;
     var spawnFlag;
     var currStructCount;
+    var compCollectUnit1;
+    var compCollectUnit2;
 
     var game = new Phaser.Game(CAMERA_WIDTH, CAMERA_HEIGHT, Phaser.AUTO, '',
       { preload: preload, create: create, update: update, render: render });
@@ -562,6 +564,8 @@ window.onload = function () {
         moveCompUnit(compUnit1, closestResource.body.position.x, closestResource.body.position.y);
         closestResource = mapGroup.getClosestTo(enemyStructureGroup.getTop(), function(resource){return resource.type == 'berry';});
         moveCompUnit(compUnit2, closestResource.body.position.x, closestResource.body.position.y);
+        compCollectUnit1 = compUnit1;
+        compCollectUnit2 = compUnit2;
         game.time.events.add(1000, collectResourcesAI, this);
     }
 
@@ -576,8 +580,13 @@ window.onload = function () {
     }
 
     function attackAI() {
-        if (unitcount2 > 3) {
-                moveCompUnit(computerUnits.getTop(), playerStructureGroup.getTop().body.position.x, playerStructureGroup.getTop().body.position.y);
+        if (unitcount2 > 4) {
+            computerUnits.forEachAlive(function(unit) {
+                if (unit != compCollectUnit1 && unit != compCollectUnit2) {
+                    moveCompUnit(unit, playerStructureGroup.getTop().body.position.x,
+                    playerStructureGroup.getTop().body.position.y);
+                }
+            });
         }
         game.time.events.add(1000, attackAI, this);
     }
