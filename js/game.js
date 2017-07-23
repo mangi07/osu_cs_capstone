@@ -128,7 +128,7 @@ if (upKey.isDown)
                 for (var j = 0; j < playerUnits.children.length; j++) {
                     game.physics.arcade.overlap(playerUnits.children[i], playerUnits.children[j], stopUnit, null, this);
                 }
-                game.physics.arcade.overlap(playerUnits.children[i], playerStructureGroup, healUnit, null, this);
+                game.physics.arcade.overlap(playerUnits.children[i], playerStructureGroup, healUnit1, null, this);
                 game.physics.arcade.overlap(playerUnits.children[i], enemyStructureGroup, unitCombat, null, this);
 
             }
@@ -138,7 +138,7 @@ if (upKey.isDown)
                 for (var j = 0; j < computerUnits.children.length; j++) {
                     game.physics.arcade.overlap(computerUnits.children[i], computerUnits.children[j], stopUnit, null, this);
                 }
-                game.physics.arcade.overlap(playerUnits.children[i], enemyStructureGroup, healUnit, null, this);
+                game.physics.arcade.overlap(computerUnits.children[i], enemyStructureGroup, healUnit2, null, this);
                 game.physics.arcade.overlap(computerUnits.children[i], playerStructureGroup, unitCombat, null, this);
             }
 
@@ -235,7 +235,8 @@ if (upKey.isDown)
                 game['destPoint' + selectedUnit.name].kill();
             }
             game['destPoint' + selectedUnit.name] = game.add.sprite(this.game.input.activePointer.x + game.camera.x, this.game.input.activePointer.y + game.camera.y);
-
+            game['destPoint' + selectedUnit.name].width = 10;
+            game['destPoint' + selectedUnit.name].height = 10;
             game['destPoint' + selectedUnit.name].enableBody = true;
             game.physics.arcade.enable(game['destPoint' + selectedUnit.name]);
             game.physics.arcade.moveToObject(selectedUnit, game['destPoint' + selectedUnit.name], VELOCITY);
@@ -285,17 +286,31 @@ if (upKey.isDown)
         }
     }
 
-    function healUnit(unit) {
+    function healUnit1(unit) {
+        console.log("healing1");
         unit.body.velocity.x = 0;
         unit.body.velocity.y = 0;
+        console.log(unit.HP);
+        console.log(unit.Max_HP)
+        if (unit.HP < unit.Max_HP) {
+            unit.HP += Math.min(1, unit.Max_HP - unit.HP);
+        }
+        //console.log(unit.HP);
+    }
+    function healUnit2(unit) {
+        console.log("healing2");
+        unit.body.velocity.x = 0;
+        unit.body.velocity.y = 0;
+        console.log(unit.HP);
+        console.log(unit.Max_HP)
         if (unit.HP < unit.Max_HP) {
             unit.HP += Math.min(1, unit.Max_HP - unit.HP);
         }
         //console.log(unit.HP);
     }
 
-
     function unitCombat(player, enemy) {
+        console.log(player, enemy);
         stopUnit(player, game['destPoint' + player.name]);
         if (computerUnits.getIndex(enemy) > -1) {
             stopUnit(enemy, game['destPoint' + enemy.name]);
@@ -303,9 +318,9 @@ if (upKey.isDown)
         var roll = Math.random();
         //console.log(roll);
         if (roll > .5)
-            player.HP = player.HP - (enemy.Attack - player.Defense);
+            player.HP = player.HP - Math.max(0, (enemy.Attack - player.Defense));
         else
-            enemy.HP = enemy.HP - (player.Attack - enemy.Defense);
+            enemy.HP = enemy.HP - Math.max(0, (player.Attack - enemy.Defense));
         console.log(player.HP, enemy.HP);
         if (player.HP < 0)
             player.kill();
@@ -442,7 +457,9 @@ if (upKey.isDown)
         borrowed from: http://www.andy-howard.com/how-to-double-click-in-phaser/index.html on 7/12/17
     */
         playerStructureGroup.forEach(function (structure) {
-            structure.HP = 100000;
+            structure.HP = 25000;
+            structure.Attack = 15;
+            structure.Defense = 20;
             structure.events.onInputDown.add(function (itemBeingClicked) {
                 if (!secondClick) {
                     secondClick = true;
@@ -462,6 +479,12 @@ if (upKey.isDown)
             }, this);
             playerStructureGroup.enableBody = true;
         });
+
+        enemyStructureGroup.forEach(function (structure){
+            structure.HP = 25000;
+            structure.Attack = 15;
+            structure.Defense = 20;
+        });
     }
 
 
@@ -473,7 +496,7 @@ if (upKey.isDown)
         uiBackground.height = UI_HEIGHT;
         uiGroup.add(uiBackground);
         addingStructureGroup.inputEnableChildren = true;
-        var structureSprites = ["sawmill", "structure", "structure", "structure", "structure"]
+        var structureSprites = ["sawmill", "structure", "structure", "structure", "structure"];
         var x;
         var y = CAMERA_HEIGHT - UI_HEIGHT + TILE_LENGTH + TILE_LENGTH / 2;
         for (var i = 1; i <= structureSprites.length; i++) {
