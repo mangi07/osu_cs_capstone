@@ -525,7 +525,7 @@ window.onload = function () {
               mapGroup,
               resources,
               playerUnits,
-              unitCount,
+              playerUnitCount,
               game
             );
         }
