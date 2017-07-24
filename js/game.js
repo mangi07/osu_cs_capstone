@@ -107,14 +107,6 @@ window.onload = function () {
         if (!gameOver) {
             updateCameraView();
             updateUIText();
-if (upKey.isDown)
-    {
-        save();
-    }
-        else if (downKey.isDown)
-    {
-        load(game);
-    }
             for (var j = 0; j < mapGroup.children.length; j++) {
                 if (game.physics.arcade.overlap(playerUnits, mapGroup.children[j], collectResource, null, this) == false) {
                     mapGroup.children[j].alpha = 1;
