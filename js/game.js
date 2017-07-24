@@ -297,9 +297,9 @@ window.onload = function () {
         var roll = Math.random();
         //console.log(roll);
         if (roll > .5)
-            player.HP = player.HP - (enemy.Attack - player.Defense);
+            player.HP = player.HP - Math.max(0, (enemy.Attack - player.Defense));
         else
-            enemy.HP = enemy.HP - (player.Attack - enemy.Defense);
+            enemy.HP = enemy.HP - Math.max(0,(player.Attack - enemy.Defense));
 
         console.log(player.HP, enemy.HP);
         if (player.HP < 0)
