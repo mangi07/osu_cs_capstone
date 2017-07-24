@@ -284,7 +284,7 @@ window.onload = function () {
         unit.body.velocity.x = 0;
         unit.body.velocity.y = 0;
         if (unit.HP < unit.Max_HP) {
-            unit.HP += Math.min(0, unit.Max_HP - unit.HP);
+            unit.HP += Math.min(1, unit.Max_HP - unit.HP);
         }
         //console.log(unit.HP);
     }
