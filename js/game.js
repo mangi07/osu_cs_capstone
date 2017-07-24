@@ -673,7 +673,7 @@ window.onload = function () {
     function spawnUnitAI() {
         var compStruct1 = enemyStructureGroup.getTop();
         if (enemyLumber > 10 && enemyFood > 10) {
-            spawnEnemyUnit(compStruct1.position.x - TILE_LENGTH, compStruct1.position.y - TILE_LENGTH);
+            spawnEnemyUnit(compStruct1.position.x - TILE_LENGTH, compStruct1.position.y - TILE_LENGTH, "beaver");
             enemyLumber -= 10;
             enemyFood -= 10;
         }
