@@ -437,7 +437,7 @@ window.onload = function () {
     */
         playerStructureGroup.forEach(function (structure) {
             structure.HP = 25000;
-            structure.Attack = 3;
+            structure.Attack = 15;
             structure.Defense = 20;
             structure.events.onInputDown.add(function (itemBeingClicked) {
                 if (!secondClick) {
