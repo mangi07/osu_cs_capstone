@@ -46,6 +46,7 @@ window.onload = function () {
     var compAttackUnits = [];
     var moveDown;
     var startAttack;
+    var uiResourceText;
   
     var units = {};
     //change this to a loop over an array of unit types??
