@@ -28,7 +28,6 @@ var Structures = {
 	* 
 	*/
 	initStructures: function(coordsGenerator, mapArea, spriteCount, group, key, game){
-
 		// load sawmills and dams in different parts of the map
 
 		//GameUtilities.randomReplaceTilesWithKey(mapGroup, "grass", "sawmill", 1.2, 0); // tile map version
@@ -57,8 +56,9 @@ var Structures = {
 			var coords = coordsGenerator.getCoords(mapArea);
 			var x = coords[0];
 			var y = coords[1];
-	
-			structure = game.add.sprite(x, y, key);
+			var structure = group.create(x, y, key);
+			structure.Name = "Structure" + i;
+			structure.HP = 1000000;
 			structure.anchor.setTo(0, 0);
 			group.add(structure);
 			structure.inputEnabled = true;
