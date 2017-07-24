@@ -562,8 +562,6 @@ if (upKey.isDown)
 
 
     function createUnits() {
-        console.log(beaverData);
-        console.log(lumberjackData);
         var playerUnitX = playerStructureGroup.getTop().position.x;
         var playerUnitY = playerStructureGroup.getTop().position.y;
         var computerUnitX = enemyStructureGroup.getTop().position.x;
