@@ -65,9 +65,6 @@ window.onload = function () {
         // Parse JSON string into object
         units[type] = JSON.parse(response);
     }));
-
-    console.log(units);
-    
     var game = new Phaser.Game(CAMERA_WIDTH, CAMERA_HEIGHT, Phaser.AUTO, '',
       { preload: preload, create: create, update: update, render: render });
 
@@ -91,7 +88,9 @@ window.onload = function () {
         initEnemyAI();
         game.input.mousePointer.leftButton.onDown.add(selectUnit, this);
 
+
         this.game.input.mousePointer.rightButton.onDown.add(moveUnit, this)
+
         gameOver = false;
 
         game.sound.setDecodedCallback([bgm], start, this);
@@ -123,6 +122,7 @@ if (upKey.isDown)
                 }
                 game.physics.arcade.overlap(computerUnits, mapGroup.children[j], collectResource, null, this);
             }
+
             for (i = 0; i < playerUnits.children.length; i++) {
                 game.physics.arcade.overlap(playerUnits.children[i], game['destPoint' + playerUnits.children[i].name], stopUnit, null, this);
                 for (var j = 0; j < playerUnits.children.length; j++) {
@@ -130,6 +130,7 @@ if (upKey.isDown)
                 }
                 game.physics.arcade.overlap(playerUnits.children[i], playerStructureGroup, healUnit, null, this);
                 game.physics.arcade.overlap(playerUnits.children[i], enemyStructureGroup, unitCombat, null, this);
+
 
             }
 
@@ -142,6 +143,7 @@ if (upKey.isDown)
                 game.physics.arcade.overlap(computerUnits.children[i], playerStructureGroup, unitCombat, null, this);
             }
 
+
             for (var i = 0; i < playerUnits.children.length; i++) {
                 for (var j = 0; j < computerUnits.children.length; j++) {
                     game.physics.arcade.overlap(playerUnits.children[i], computerUnits.children[j], unitCombat, null, this);
@@ -149,6 +151,7 @@ if (upKey.isDown)
             }
             // when placing a resource and dragging over a sprite it should not overlap, tint the dragged resource red
             Structures.update(uiGroup, playerStructureGroup, enemyStructureGroup, mapGroup, game);
+
         }
         else {
             playerUnits.forEach(function (unit) {
@@ -165,6 +168,7 @@ if (upKey.isDown)
     }
 
     function collectResource(resource, unit) {
+
         if (playerUnits.getIndex(unit) > -1)
             resource.alpha = 0.6;
         if (resource.collectFlag == true) {
@@ -200,6 +204,7 @@ if (upKey.isDown)
                 console.log(playerUnits.children[i]);
                 selectedStructure = null;
             }
+
         }
         for (i = 0; i < playerStructureGroup.children.length; i++) {
             playerStructureGroup.children[i].tint = 0xFFFFFF;
@@ -208,12 +213,14 @@ if (upKey.isDown)
                 selectedStructure = playerStructureGroup.children[i];
                 playerStructureGroup.children[i].tint = 0xFFDF00;
                 if (selectedUnit) {
+
                     selectedUnit.alpha = 1;
                 }
                 selectedUnit = null;
                 return;
             }
         }
+
     }
 
     function moveUnit() {
@@ -224,8 +231,6 @@ if (upKey.isDown)
         if (!gameOver) {
             if (this.game.input.activePointer.y > CAMERA_HEIGHT - UI_HEIGHT)
                 return;
-
-
 
 
 
@@ -254,6 +259,7 @@ if (upKey.isDown)
             game.physics.arcade.enable(game['destPoint' + unit.name]);
             game.physics.arcade.moveToObject(unit, game['destPoint' + unit.name], VELOCITY);
         }
+
     }
 
     function render() {
@@ -274,12 +280,14 @@ if (upKey.isDown)
                 if (destSprite.body.velocity.x == 0 &&
                     destSprite.body.velocity.y == 0) {
                     if (unit.body.position.y < destSprite.body.position.y) {
+
                         unit.body.position.y -= TILE_LENGTH / 8;
                         destSprite.body.position.y += TILE_LENGTH / 8;
                     }
                     else {
                         unit.body.position.y += TILE_LENGTH / 8;
                         destSprite.body.position.y -= TILE_LENGTH / 8;
+
                     }
                 }
             }
@@ -290,6 +298,7 @@ if (upKey.isDown)
         console.log("healing");
         unit.body.velocity.x = 0;
         unit.body.velocity.y = 0;
+
         console.log(unit.HP);
         console.log(unit.Max_HP)
         if (unit.HP < unit.Max_HP) {
@@ -311,6 +320,7 @@ if (upKey.isDown)
             player.HP = player.HP - (enemy.Attack - player.Defense);
         else
             enemy.HP = enemy.HP - (player.Attack - enemy.Defense);
+
         console.log(player.HP, enemy.HP);
         if (player.HP < 0)
             player.kill();
@@ -321,6 +331,7 @@ if (upKey.isDown)
     function initResourceCount() {
 
         game.resources = { lumber: STARTINGLUMBER, food: STARTINGFOOD };
+
         enemyLumber = 100;
         enemyFood = 100;
     }
@@ -424,6 +435,7 @@ if (upKey.isDown)
             game.physics.arcade.enable(tile);
             tile.collectFlag = true;
         }
+
         /*
                     Structures.initStructures(
                       gridCoordsGenerator,
@@ -452,6 +464,7 @@ if (upKey.isDown)
             structure.Defense = 20;
             structure.events.onInputDown.add(function (itemBeingClicked) {
                 if (!secondClick) {
+
                     secondClick = true;
                     game.time.events.add(300, function () {
                         secondClick = false;
@@ -466,6 +479,7 @@ if (upKey.isDown)
                         spawnPlayerUnit(spawnX, spawnY, 'lumberjack');
                     }
                 }
+
             }, this);
             playerStructureGroup.enableBody = true;
         });
@@ -474,6 +488,7 @@ if (upKey.isDown)
             structure.HP = 25000;
             structure.Attack = 3;
             structure.Defense = 20;
+
         });
     }
 
@@ -525,6 +540,7 @@ if (upKey.isDown)
     function updateUIText() {
         //console.log(selectedUnit);
         uiResourceText.setText("Lumber: " + game.resources.lumber + "   Food: " + game.resources.food);
+
         if (selectedUnit) {
             uiUnitText.setText("Selected Unit: " + (selectedUnit && selectedUnit.type ? selectedUnit.type : "None") + "\nHealth: " + selectedUnit.HP + "\nAttack: " + selectedUnit.Attack + "\nDefense: " + selectedUnit.Defense);
             uiSelectedUnit.loadTexture(selectedUnit.key, 0, false);
@@ -533,6 +549,7 @@ if (upKey.isDown)
             uiUnitText.setText("HitPoints: " + selectedStructure.HP);
             uiSelectedUnit.loadTexture(selectedStructure.key, 0, false);
         }
+
         uiSelectedUnit.width = UI_HEIGHT;
         uiSelectedUnit.height = UI_HEIGHT;
 
@@ -557,11 +574,14 @@ if (upKey.isDown)
 
 
     function createUnits() {
+        console.log(beaverData);
+        console.log(lumberjackData);
         var playerUnitX = playerStructureGroup.getTop().position.x;
         var playerUnitY = playerStructureGroup.getTop().position.y;
         var computerUnitX = enemyStructureGroup.getTop().position.x;
         var computerUnitY = enemyStructureGroup.getTop().position.y;
         if (playerUnitY + 2 * TILE_LENGTH < WORLD_HEIGHT - UI_HEIGHT) {
+
             spawnPlayerUnit(playerUnitX, playerUnitY + 2 * TILE_LENGTH, 'lumberjack');
         }
         else if (playerUnitX + 2 * TILE_LENGTH < WORLD_WIDTH) {
@@ -598,6 +618,7 @@ if (upKey.isDown)
         playerUnit.Max_HP = unitData.max_hp;
         playerUnit.Attack = unitData.attack;
         playerUnit.Defense = unitData.defense;
+
         game.physics.arcade.enable(playerUnit);
         playerUnit.enableBody = true;
         playerUnitCount += 1;
@@ -622,6 +643,7 @@ if (upKey.isDown)
         enemyUnit.enableBody = true;
         enemyUnitCount += 1;
         console.log("spawned unit");
+
     }
 
     function initEnemyAI() {
@@ -630,6 +652,7 @@ if (upKey.isDown)
         var closestResource;
         var compUnit1 = computerUnits.getTop();
         var compUnit2 = computerUnits.getBottom();
+
         console.log(compUnit2);
         mapGroup.forEach(function (resource) {
             tempDistance = Phaser.Math.distance(compUnit1.body.position.x,
@@ -674,5 +697,28 @@ if (upKey.isDown)
             }
         };
         xobj.send(null);
+
     }
+
+  function loadJSON(type, callback) {   
+//https://codepen.io/KryptoniteDove/post/load-json-file-locally-using-pure-javascript
+    var xobj = new XMLHttpRequest();
+        xobj.overrideMimeType("application/json");
+    xobj.open('GET', 'assets/units/' + type + '.json', false); // Replace 'my_data' with the path to your file
+    xobj.onreadystatechange = function () {
+          if (xobj.readyState == 4 && xobj.status == "200") {
+            // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+            callback(xobj.responseText);
+          }
+    };
+    xobj.send(null);  
+ }
+//         return fetch("assets/units/" + type + ".json")
+//   .then((resp) => resp.json())
+//   .then(data => {
+//       return data;
+//   });
+    
+
+
 };
