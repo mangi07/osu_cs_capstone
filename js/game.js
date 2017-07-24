@@ -41,6 +41,10 @@ window.onload = function () {
     var currStructCount;
     var compCollectUnit1;
     var compCollectUnit2;
+    var compDefenseUnits = [];
+    var compAttackUnits = [];
+    var moveDown;
+    var startAttack;
 
     var game = new Phaser.Game(CAMERA_WIDTH, CAMERA_HEIGHT, Phaser.AUTO, '',
       { preload: preload, create: create, update: update, render: render });
@@ -61,8 +65,9 @@ window.onload = function () {
         loadUserInterface();
         unitCount = 0;
         createUnits();
-        spawnUnitAI();
         collectResourcesAI();
+        spawnUnitAI();
+        defendAI();
         attackAI();
         game.input.onDown.add(moveUnit, this);
         gameOver = false;
@@ -71,6 +76,8 @@ window.onload = function () {
 
         currStructCount = 1;
         spawnFlag = true;
+        moveDown = true;
+        startAttack = true;
     }
 
     function start() {
@@ -206,8 +213,10 @@ window.onload = function () {
     }
 
     function stopUnit(unit, destSprite) {
-        unit.body.velocity.y = 0;
-        unit.body.velocity.x = 0;
+        if (unit.body != null) {
+            unit.body.velocity.y = 0;
+            unit.body.velocity.x = 0;
+        }
         if (destSprite != undefined) {
             if (playerUnits.getIndex(destSprite) == -1 &&
                 computerUnits.getIndex(destSprite) == -1) {
@@ -580,17 +589,91 @@ window.onload = function () {
             enemyLumber -= 10;
             enemyFood -= 10;
         }
-        game.time.events.add(20000, spawnUnitAI, this);
+        game.time.events.add(10000, spawnUnitAI, this);
+    }
+
+    function defendAI() {
+        var compStruct1 = enemyStructureGroup.getTop();
+        if (computerUnits.countLiving() < 3) {
+            compDefenseUnits = [];
+        }
+        if (compDefenseUnits.length < 12) {
+            computerUnits.forEachAlive(function(unit) {
+                if (unit != compCollectUnit1 && unit != compCollectUnit2 &&
+                    compDefenseUnits.indexOf(unit) == -1) {
+                    compDefenseUnits.push(unit);
+                }
+            });
+        }
+        xOffsetGlobal = 2*TILE_LENGTH;
+        yOffsetGlobal = 2*TILE_LENGTH;
+        for (i = 0; i < compDefenseUnits.length; i++) {
+                    stopUnit(compDefenseUnits[i], undefined);
+                    if (i < 4) {
+                        xOffset = (2 - Math.floor(i/2) + 1) * TILE_LENGTH;
+                        yOffset = yOffsetGlobal/2;
+                    }
+                    else if (i < 8) {
+                        xOffset = xOffsetGlobal/2;
+                        yOffset = (2 - Math.floor((i-4)/2) + 1) * TILE_LENGTH;
+                    }
+                    else if (i < 12) {
+                        xOffset = xOffsetGlobal/2;
+                        yOffset = -((2 - Math.floor((i-8)/2) + 1) * TILE_LENGTH);
+                    }
+                    if (moveDown == true) {
+                        if (i > 3 && i < 12)
+                            xOffset = -xOffset;
+                    }
+                    else {
+                        if (i < 4)
+                            yOffset = -yOffset;
+                    }
+                    if (i < 4)
+                        yOffset = (i % 2) * yOffsetGlobal + yOffset;
+                    else if (i < 12)
+                        xOffset = ((i % 2) - 1) * xOffsetGlobal - xOffset;
+                    moveCompUnit(compDefenseUnits[i],
+                        compStruct1.body.position.x - xOffset,
+                        compStruct1.body.position.y + yOffset);
+        }
+        if (moveDown == true)
+            moveDown = false;
+        else
+            moveDown = true;
+        game.time.events.add(1000, defendAI, this);
     }
 
     function attackAI() {
-        if (computerUnits.countLiving() > 4) {
+        var compAttackUnit;
+        if (computerUnits.countLiving() > 17) {
+          if (startAttack) {
+            for (i = 0; i < 4; i++) {
+                compAttackUnit = compDefenseUnits.shift();
+                moveCompUnit(compAttackUnit, playerStructureGroup.getTop().body.position.x,
+                playerStructureGroup.getTop().body.position.y);
+                compAttackUnits.push(compAttackUnit);
+                
+            }
             computerUnits.forEachAlive(function(unit) {
-                if (unit != compCollectUnit1 && unit != compCollectUnit2) {
-                    moveCompUnit(unit, playerStructureGroup.getTop().body.position.x,
-                    playerStructureGroup.getTop().body.position.y);
+                if (unit != compCollectUnit1 && unit != compCollectUnit2
+                    && compDefenseUnits.indexOf(unit) == -1
+                    && compAttackUnits.indexOf(unit) == -1) {
+                    compDefenseUnits.unshift(unit);
                 }
             });
+            startAttack = false;
+          }
+          else {
+            for (var j = 0; j < compAttackUnits.length; j++) {
+                moveCompUnit(compAttackUnits[j], playerStructureGroup.getTop().body.position.x,
+                playerStructureGroup.getTop().body.position.y);
+            }
+          }
+        }
+        else {
+            compAttackUnits = [];
+            startAttack = true;
         }
         game.time.events.add(1000, attackAI, this);
     }
