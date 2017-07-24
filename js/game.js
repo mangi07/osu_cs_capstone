@@ -457,10 +457,8 @@ window.onload = function () {
           enemyStructureGroup, "dam",
           game
         );
-
-	/*
-	borrowed from: http://www.andy-howard.com/how-to-double-click-in-phaser/index.html on 7/12/17
-*/
+        
+        //borrowed from: http://www.andy-howard.com/how-to-double-click-in-phaser/index.html on 7/12/17
         playerStructureGroup.forEach(function(structure) {
             structure.secondClick = false;
             structure.events.onInputDown.add(function(itemBeingClicked) {
