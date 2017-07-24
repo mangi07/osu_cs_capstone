@@ -40,7 +40,6 @@ window.onload = function () {
     var spawnY;
     var stop = true;
     var units = {};
-
     //change this to a loop over an array of unit types??
     var type = "beaver";
     loadJSON(type, (function (response) {
@@ -67,7 +66,6 @@ window.onload = function () {
     }));
 
     console.log(units);
-    
     var game = new Phaser.Game(CAMERA_WIDTH, CAMERA_HEIGHT, Phaser.AUTO, '',
       { preload: preload, create: create, update: update, render: render });
 
@@ -123,6 +121,7 @@ if (upKey.isDown)
                 }
                 game.physics.arcade.overlap(computerUnits, mapGroup.children[j], collectResource, null, this);
             }
+
             for (i = 0; i < playerUnits.children.length; i++) {
                 game.physics.arcade.overlap(playerUnits.children[i], game['destPoint' + playerUnits.children[i].name], stopUnit, null, this);
                 for (var j = 0; j < playerUnits.children.length; j++) {
@@ -130,6 +129,7 @@ if (upKey.isDown)
                 }
                 game.physics.arcade.overlap(playerUnits.children[i], playerStructureGroup, healUnit, null, this);
                 game.physics.arcade.overlap(playerUnits.children[i], enemyStructureGroup, unitCombat, null, this);
+
 
             }
 
@@ -141,6 +141,7 @@ if (upKey.isDown)
                 game.physics.arcade.overlap(computerUnits.children[i], enemyStructureGroup, healUnit, null, this);
                 game.physics.arcade.overlap(computerUnits.children[i], playerStructureGroup, unitCombat, null, this);
             }
+
 
             for (var i = 0; i < playerUnits.children.length; i++) {
                 for (var j = 0; j < computerUnits.children.length; j++) {
@@ -280,6 +281,7 @@ if (upKey.isDown)
                     else {
                         unit.body.position.y += TILE_LENGTH / 8;
                         destSprite.body.position.y -= TILE_LENGTH / 8;
+
                     }
                 }
             }
@@ -297,8 +299,6 @@ if (upKey.isDown)
         }
         //console.log(unit.HP);
     }
-
-
     function unitCombat(player, enemy) {
         console.log(player, enemy);
         stopUnit(player, game['destPoint' + player.name]);
@@ -311,6 +311,7 @@ if (upKey.isDown)
             player.HP = player.HP - (enemy.Attack - player.Defense);
         else
             enemy.HP = enemy.HP - (player.Attack - enemy.Defense);
+
         console.log(player.HP, enemy.HP);
         if (player.HP < 0)
             player.kill();
@@ -319,7 +320,6 @@ if (upKey.isDown)
     }
 
     function initResourceCount() {
-
         game.resources = { lumber: STARTINGLUMBER, food: STARTINGFOOD };
         enemyLumber = 100;
         enemyFood = 100;
@@ -452,6 +452,7 @@ if (upKey.isDown)
             structure.Defense = 20;
             structure.events.onInputDown.add(function (itemBeingClicked) {
                 if (!secondClick) {
+
                     secondClick = true;
                     game.time.events.add(300, function () {
                         secondClick = false;
@@ -466,6 +467,7 @@ if (upKey.isDown)
                         spawnPlayerUnit(spawnX, spawnY, 'lumberjack');
                     }
                 }
+
             }, this);
             playerStructureGroup.enableBody = true;
         });
@@ -474,6 +476,7 @@ if (upKey.isDown)
             structure.HP = 25000;
             structure.Attack = 3;
             structure.Defense = 20;
+
         });
     }
 
@@ -525,6 +528,7 @@ if (upKey.isDown)
     function updateUIText() {
         //console.log(selectedUnit);
         uiResourceText.setText("Lumber: " + game.resources.lumber + "   Food: " + game.resources.food);
+
         if (selectedUnit) {
             uiUnitText.setText("Selected Unit: " + (selectedUnit && selectedUnit.type ? selectedUnit.type : "None") + "\nHealth: " + selectedUnit.HP + "\nAttack: " + selectedUnit.Attack + "\nDefense: " + selectedUnit.Defense);
             uiSelectedUnit.loadTexture(selectedUnit.key, 0, false);
@@ -533,6 +537,7 @@ if (upKey.isDown)
             uiUnitText.setText("HitPoints: " + selectedStructure.HP);
             uiSelectedUnit.loadTexture(selectedStructure.key, 0, false);
         }
+
         uiSelectedUnit.width = UI_HEIGHT;
         uiSelectedUnit.height = UI_HEIGHT;
 
@@ -557,6 +562,8 @@ if (upKey.isDown)
 
 
     function createUnits() {
+        console.log(beaverData);
+        console.log(lumberjackData);
         var playerUnitX = playerStructureGroup.getTop().position.x;
         var playerUnitY = playerStructureGroup.getTop().position.y;
         var computerUnitX = enemyStructureGroup.getTop().position.x;
@@ -598,11 +605,13 @@ if (upKey.isDown)
         playerUnit.Max_HP = unitData.max_hp;
         playerUnit.Attack = unitData.attack;
         playerUnit.Defense = unitData.defense;
+
         game.physics.arcade.enable(playerUnit);
         playerUnit.enableBody = true;
         playerUnitCount += 1;
         console.log("spawned unit");
     }
+
 
     function spawnEnemyUnit(x, y, type) {
         console.log(units);
@@ -622,6 +631,7 @@ if (upKey.isDown)
         enemyUnit.enableBody = true;
         enemyUnitCount += 1;
         console.log("spawned unit");
+
     }
 
     function initEnemyAI() {
@@ -630,6 +640,7 @@ if (upKey.isDown)
         var closestResource;
         var compUnit1 = computerUnits.getTop();
         var compUnit2 = computerUnits.getBottom();
+
         console.log(compUnit2);
         mapGroup.forEach(function (resource) {
             tempDistance = Phaser.Math.distance(compUnit1.body.position.x,
@@ -674,5 +685,28 @@ if (upKey.isDown)
             }
         };
         xobj.send(null);
+
     }
+
+  function loadJSON(type, callback) {   
+//https://codepen.io/KryptoniteDove/post/load-json-file-locally-using-pure-javascript
+    var xobj = new XMLHttpRequest();
+        xobj.overrideMimeType("application/json");
+    xobj.open('GET', 'assets/units/' + type + '.json', false); // Replace 'my_data' with the path to your file
+    xobj.onreadystatechange = function () {
+          if (xobj.readyState == 4 && xobj.status == "200") {
+            // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+            callback(xobj.responseText);
+          }
+    };
+    xobj.send(null);  
+ }
+//         return fetch("assets/units/" + type + ".json")
+//   .then((resp) => resp.json())
+//   .then(data => {
+//       return data;
+//   });
+    
+
+
 };
