@@ -38,7 +38,15 @@ window.onload = function () {
     var enemyFood;
     var spawnX;
     var spawnY;
-    var stop = true;
+    var spawnFlag;
+    var currStructCount;
+    var compCollectUnit1;
+    var compCollectUnit2;
+    var compDefenseUnits = [];
+    var compAttackUnits = [];
+    var moveDown;
+    var startAttack;
+  
     var units = {};
     //change this to a loop over an array of unit types??
     var type = "beaver";
@@ -65,7 +73,6 @@ window.onload = function () {
         units[type] = JSON.parse(response);
     }));
 
-    console.log(units);
     var game = new Phaser.Game(CAMERA_WIDTH, CAMERA_HEIGHT, Phaser.AUTO, '',
       { preload: preload, create: create, update: update, render: render });
 
@@ -85,8 +92,13 @@ window.onload = function () {
 
         loadUserInterface();
 
+        unitCount = 0;
         createUnits();
-        initEnemyAI();
+        collectResourcesAI();
+        spawnUnitAI();
+        defendAI();
+        attackAI();
+
         game.input.mousePointer.leftButton.onDown.add(selectUnit, this);
 
         this.game.input.mousePointer.rightButton.onDown.add(moveUnit, this)
@@ -94,9 +106,11 @@ window.onload = function () {
 
         game.sound.setDecodedCallback([bgm], start, this);
 
-        downKey = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
+        currStructCount = 1;
+        spawnFlag = true;
+        moveDown = true;
+        startAttack = true;
 
-        upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
     }
 
     function start() {
@@ -135,6 +149,8 @@ window.onload = function () {
             }
 
 
+
+
             for (var i = 0; i < playerUnits.children.length; i++) {
                 for (var j = 0; j < computerUnits.children.length; j++) {
                     game.physics.arcade.overlap(playerUnits.children[i], computerUnits.children[j], unitCombat, null, this);
@@ -142,6 +158,10 @@ window.onload = function () {
             }
             // when placing a resource and dragging over a sprite it should not overlap, tint the dragged resource red
             Structures.update(uiGroup, playerStructureGroup, enemyStructureGroup, mapGroup, game);
+                  if (spawnFlag) {
+            spawnFlag = false;
+        }
+
         }
         else {
             playerUnits.forEach(function (unit) {
@@ -217,9 +237,11 @@ window.onload = function () {
         if (!gameOver) {
             if (this.game.input.activePointer.y > CAMERA_HEIGHT - UI_HEIGHT)
                 return;
+        if (game['destPoint' + selectedUnit.name]) {
+            game['destPoint' + selectedUnit.name].kill();
+        }
 
-
-
+        game['destPoint' + selectedUnit.name] = game.add.sprite(this.game.input.activePointer.x + game.camera.x, this.game.input.activePointer.y + game.camera.y);
 
 
             //console.log(selectedUnit);
@@ -256,12 +278,14 @@ window.onload = function () {
     }
 
     function stopUnit(unit, destSprite) {
-        unit.body.velocity.y = 0;
-        unit.body.velocity.x = 0;
+        if (unit.body != null) {
+            unit.body.velocity.y = 0;
+            unit.body.velocity.x = 0;
+        }
         if (destSprite != undefined) {
             if (playerUnits.getIndex(destSprite) == -1 &&
                 computerUnits.getIndex(destSprite) == -1) {
-                destSprite.kill();
+                destSprite.destroy();
             }
             else {
                 if (destSprite.body.velocity.x == 0 &&
@@ -289,8 +313,9 @@ window.onload = function () {
         //console.log(unit.HP);
     }
     function unitCombat(player, enemy) {
-        console.log(player, enemy);
-        stopUnit(player, game['destPoint' + player.name]);
+        if (playerUnits.getIndex(player) > -1) {
+            stopUnit(player, game['destPoint' + player.name]);
+        }
         if (computerUnits.getIndex(enemy) > -1) {
             stopUnit(enemy, game['destPoint' + enemy.name]);
         }
@@ -303,9 +328,9 @@ window.onload = function () {
 
         console.log(player.HP, enemy.HP);
         if (player.HP < 0)
-            player.kill();
+            player.destroy();
         if (enemy.HP < 0)
-            enemy.kill();
+            enemy.destroy();
     }
 
     function initResourceCount() {
@@ -439,20 +464,40 @@ window.onload = function () {
             structure.HP = 25000;
             structure.Attack = 15;
             structure.Defense = 20;
+          
             structure.events.onInputDown.add(function (itemBeingClicked) {
                 if (!secondClick) {
-
-                    secondClick = true;
-                    game.time.events.add(300, function () {
-                        secondClick = false;
+            Structures.initStructures(
+              gridCoordsGenerator,
+              playerStructureGroup,
+              enemyStructureGroup,
+              game
+            );
+	/*
+	borrowed from: http://www.andy-howard.com/how-to-double-click-in-phaser/index.html on 7/12/17
+*/
+        playerStructureGroup.forEach(function(structure) {
+            structure.secondClick = false;
+            structure.events.onInputDown.add(function(itemBeingClicked) {
+                if (!structure.secondClick) { 
+                    structure.secondClick = true;
+                    game.time.events.add(300, function(){
+                        structure.secondClick = false;
                     }, this);
                 }
                 else {
-                    if (game.resources.lumber > 0 && game.resources.food > 0) {
+                    structure.secondClick = false;
+                    if (game.resources.lumber > 10 && game.resources.food > 10) {
                         game.resources.lumber -= 10;
                         game.resources.food -= 10;
-                        spawnX = structure.position.x - TILE_LENGTH;
-                        spawnY = structure.position.y - TILE_LENGTH;
+                        if (structure.position.x - TILE_LENGTH > 0)
+                            spawnX = structure.position.x - TILE_LENGTH;
+                        else
+                            spawnX = structure.position.x + 2*TILE_LENGTH;
+                        if (structure.position.y - TILE_LENGTH > 0)
+                            spawnY = structure.position.y - TILE_LENGTH;
+                        else
+                            spawnY = structure.position.y + 2*TILE_LENGTH;
                         spawnPlayerUnit(spawnX, spawnY, 'lumberjack');
                     }
                 }
@@ -480,11 +525,13 @@ window.onload = function () {
         addingStructureGroup.inputEnableChildren = true;
         var structureSprites = ["sawmill", "structure", "structure", "structure", "structure"];
         var x;
-        var y = CAMERA_HEIGHT - UI_HEIGHT + TILE_LENGTH + TILE_LENGTH / 2;
+        var y = CAMERA_HEIGHT - UI_HEIGHT + TILE_LENGTH;
         for (var i = 1; i <= structureSprites.length; i++) {
             x = i * TILE_LENGTH + TILE_LENGTH / 2;
-            uiSprite = game.add.sprite(x, y, structureSprites[i - 1]);
-            uiSprite.anchor.setTo(0.5, 0.5);
+
+            uiSprite = game.add.sprite(x, y, structureSprites[i-1]);
+            uiSprite.anchor.setTo(0, 0);
+
             uiGroup.add(uiSprite);
 
             Structures.enableStructureCreation(
@@ -494,6 +541,8 @@ window.onload = function () {
               enemyStructureGroup,
               mapGroup,
               resources,
+              playerUnits,
+              unitCount,
               game
             );
         }
@@ -574,6 +623,7 @@ window.onload = function () {
             spawnPlayerUnit(playerUnitX + 2 * TILE_LENGTH, playerUnitY, 'woodsman');
         }
 
+
         spawnEnemyUnit(computerUnitX, computerUnitY, 'bear');
         selectedUnit = playerUnits.children[0];
     }
@@ -621,57 +671,115 @@ window.onload = function () {
 
     }
 
-    function initEnemyAI() {
-        var minDistance = 1000000;
-        var tempDistance;
+    function collectResourcesAI() {
+      if (computerUnits.countLiving() > 1) {
         var closestResource;
-        var compUnit1 = computerUnits.getTop();
-        var compUnit2 = computerUnits.getBottom();
-
-        console.log(compUnit2);
-        mapGroup.forEach(function (resource) {
-            tempDistance = Phaser.Math.distance(compUnit1.body.position.x,
-                           compUnit1.body.position.y,
-                           resource.body.position.x,
-                           resource.body.position.y);
-            if (tempDistance < minDistance &&
-                resource.body.position.x > compUnit1.body.position.x &&
-                resource.type == 'tree') {
-                minDistance = tempDistance;
-                closestResource = resource;
-            }
-        });
-        moveCompUnit(compUnit2, closestResource.body.position.x, closestResource.body.position.y);
-        minDistance = 1000000;
-        mapGroup.forEach(function (resource) {
-            tempDistance = Phaser.Math.distance(compUnit2.body.position.x,
-                           compUnit2.body.position.y,
-                           resource.body.position.x,
-                           resource.body.position.y);
-            if (tempDistance < minDistance &&
-                resource.body.position.x < compUnit2.body.position.x &&
-                resource.type == 'berry') {
-                minDistance = tempDistance;
-                closestResource = resource;
-            }
-        });
+        var compUnit1 = computerUnits.getChildAt(0);
+        var compUnit2 = computerUnits.getChildAt(1);
+        closestResource = mapGroup.getClosestTo(enemyStructureGroup.getTop(), function(resource){return resource.type == 'tree';});
         moveCompUnit(compUnit1, closestResource.body.position.x, closestResource.body.position.y);
-        var compStruct1 = enemyStructureGroup.getTop();
-        spawnEnemyUnit(compStruct1.position.x - TILE_LENGTH, compStruct1.position.y - TILE_LENGTH, 'beaver');
+        closestResource = mapGroup.getClosestTo(enemyStructureGroup.getTop(), function(resource){return resource.type == 'berry';});
+        moveCompUnit(compUnit2, closestResource.body.position.x, closestResource.body.position.y);
+        compCollectUnit1 = compUnit1;
+        compCollectUnit2 = compUnit2;
+        game.time.events.add(1000, collectResourcesAI, this);
+      }
     }
 
-    function loadJSON(type, callback) {
-        //https://codepen.io/KryptoniteDove/post/load-json-file-locally-using-pure-javascript
-        var xobj = new XMLHttpRequest();
-        xobj.overrideMimeType("application/json");
-        xobj.open('GET', 'assets/units/' + type + '.json', false); // Replace 'my_data' with the path to your file
-        xobj.onreadystatechange = function () {
-            if (xobj.readyState == 4 && xobj.status == "200") {
-                // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
-                callback(xobj.responseText);
+    function spawnUnitAI() {
+        var compStruct1 = enemyStructureGroup.getTop();
+        if (enemyLumber > 10 && enemyFood > 10) {
+            spawnEnemyUnit(compStruct1.position.x - TILE_LENGTH, compStruct1.position.y - TILE_LENGTH);
+            enemyLumber -= 10;
+            enemyFood -= 10;
+        }
+        game.time.events.add(10000, spawnUnitAI, this);
+    }
+
+    function defendAI() {
+        var compStruct1 = enemyStructureGroup.getTop();
+        if (computerUnits.countLiving() < 3) {
+            compDefenseUnits = [];
+        }
+        if (compDefenseUnits.length < 12) {
+            computerUnits.forEachAlive(function(unit) {
+                if (unit != compCollectUnit1 && unit != compCollectUnit2 &&
+                    compDefenseUnits.indexOf(unit) == -1) {
+                    compDefenseUnits.push(unit);
+                }
+            });
+        }
+        xOffsetGlobal = 2*TILE_LENGTH;
+        yOffsetGlobal = 2*TILE_LENGTH;
+        for (i = 0; i < compDefenseUnits.length; i++) {
+                    stopUnit(compDefenseUnits[i], undefined);
+                    if (i < 4) {
+                        xOffset = (2 - Math.floor(i/2) + 1) * TILE_LENGTH;
+                        yOffset = yOffsetGlobal/2;
+                    }
+                    else if (i < 8) {
+                        xOffset = xOffsetGlobal/2;
+                        yOffset = (2 - Math.floor((i-4)/2) + 1) * TILE_LENGTH;
+                    }
+                    else if (i < 12) {
+                        xOffset = xOffsetGlobal/2;
+                        yOffset = -((2 - Math.floor((i-8)/2) + 1) * TILE_LENGTH);
+                    }
+                    if (moveDown == true) {
+                        if (i > 3 && i < 12)
+                            xOffset = -xOffset;
+                    }
+                    else {
+                        if (i < 4)
+                            yOffset = -yOffset;
+                    }
+                    if (i < 4)
+                        yOffset = (i % 2) * yOffsetGlobal + yOffset;
+                    else if (i < 12)
+                        xOffset = ((i % 2) - 1) * xOffsetGlobal - xOffset;
+                    moveCompUnit(compDefenseUnits[i],
+                        compStruct1.body.position.x - xOffset,
+                        compStruct1.body.position.y + yOffset);
+        }
+        if (moveDown == true)
+            moveDown = false;
+        else
+            moveDown = true;
+        game.time.events.add(1000, defendAI, this);
+    }
+
+    function attackAI() {
+        var compAttackUnit;
+        if (computerUnits.countLiving() > 17) {
+          if (startAttack) {
+            for (i = 0; i < 4; i++) {
+                compAttackUnit = compDefenseUnits.shift();
+                moveCompUnit(compAttackUnit, playerStructureGroup.getTop().body.position.x,
+                playerStructureGroup.getTop().body.position.y);
+                compAttackUnits.push(compAttackUnit);
+                
             }
-        };
-        xobj.send(null);
+            computerUnits.forEachAlive(function(unit) {
+                if (unit != compCollectUnit1 && unit != compCollectUnit2
+                    && compDefenseUnits.indexOf(unit) == -1
+                    && compAttackUnits.indexOf(unit) == -1) {
+                    compDefenseUnits.unshift(unit);
+                }
+            });
+            startAttack = false;
+          }
+          else {
+            for (var j = 0; j < compAttackUnits.length; j++) {
+                moveCompUnit(compAttackUnits[j], playerStructureGroup.getTop().body.position.x,
+                playerStructureGroup.getTop().body.position.y);
+            }
+          }
+        }
+        else {
+            compAttackUnits = [];
+            startAttack = true;
+        }
+        game.time.events.add(1000, attackAI, this);
 
     }
 

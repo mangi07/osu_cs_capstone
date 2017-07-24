@@ -44,11 +44,6 @@ var Structures = {
 			playerStructure.inputEnabled = true;
                         game.physics.arcade.enable(playerStructure);
 			playerStructure.HP = 10000;
-
-      game.physics.arcade.enable(playerStructure);
-			playerStructure.HP = 10000;
-
-
 		}
 */	
 
@@ -109,6 +104,8 @@ var Structures = {
 		enemyStructureGroup,
 		mapGroup, // trees and berry bushes
 		resourcePoints,
+		playerUnits,
+		unitCount,
 		game){
 
 	    selectedStructure.inputEnabled = true;
@@ -138,12 +135,49 @@ var Structures = {
 		    // resource points get deducted, and replacement sprite will pop up in the ui at the bottom.
 		    {
 //		        console.log('input disabled on', sprite.key);
-		        sprite.inputEnabled = false;
+		        sprite.input.disableDrag();
 		        sprite.sendToBack();  // We want this for the game map, I think - if it's not sending behind everything and then not visible
 
 		        uiGroup.remove(selectedStructure); // to remove from ui group so dragging is not checked on this sprite
 		        playerStructureGroup.add(selectedStructure);
+            selectedStructure.secondClick = false;
+            selectedStructure.events.onInputDown.add(function(itemBeingClicked) {
+                var spawnX;
+                var spawnY;
+                var TILE_LENGTH = 64;
+                if (!selectedStructure.secondClick) { 
+                    selectedStructure.secondClick = true;
+                    game.time.events.add(300, function(){
+                        selectedStructure.secondClick = false;
+                    }, this);
+                }
+                else {
+                        selectedStructure.secondClick = false;
+                    if (game.resources.lumber > 10 && game.resources.food > 10) {
+                        game.resources.lumber -= 10;
+                        game.resources.food -= 10;
+                        if (selectedStructure.position.x - TILE_LENGTH > 0)
+                            spawnX = selectedStructure.position.x - TILE_LENGTH;
+                        else
+                            spawnX = selectedStructure.position.x + 2*TILE_LENGTH;
+                        if (selectedStructure.position.y - TILE_LENGTH > 0)
+                            spawnY = selectedStructure.position.y - TILE_LENGTH;
+                        else
+                            spawnY = selectedStructure.position.y + 2*TILE_LENGTH;
+        var playerUnit = playerUnits.create(spawnX, spawnY, 'lumberjack');
+        playerUnit.Name = "playerUnit" + unitCount;
+        playerUnit.width = 40;
+        playerUnit.height = 40;
+        playerUnit.anchor.setTo(0, 0);
 
+        playerUnit.Name = "playerUnit" + unitCount;
+        playerUnit.HP = 100000;
+        game.physics.arcade.enable(playerUnit);
+        playerUnit.enableBody = true;
+        unitCount += 1;
+                    }
+                }
+	    }, this);
 		        // need to compensate for any camera displacement
 		        sprite.position.x += sprite.game.camera.x;
 		        sprite.position.y += sprite.game.camera.y;
@@ -152,7 +186,7 @@ var Structures = {
 
 		        // replace resource tile
 		        replacementSprite = game.add.sprite(originX, originY, sprite.key);
-	            replacementSprite.anchor.setTo(0.5, 0.5);
+	            replacementSprite.anchor.setTo(0, 0);
 	            uiGroup.add(replacementSprite);
 	            this.enableStructureCreation(
 					uiGroup,
@@ -161,6 +195,8 @@ var Structures = {
 					enemyStructureGroup,
 					mapGroup, // trees and berry bushes
 					resourcePoints,
+                                        playerUnits,
+                                        unitCount,
 					game
 				);
 
