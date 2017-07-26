@@ -19,19 +19,21 @@ var Structures = {
 	* requires gameUtilities.js
 	* @param {Object} coordsGenerator - takes a GridCoordinatesGenerator object
 	*   (see gameUtilities.js)
-	* @param {Object} playerGroup - the sprite group that represents the player's structures
-	* @param {Object} enemyGroup - the sprite group that represents the enemy's structures
+	* @param {Number} mapArea - number passed to coordsGenerator.getCoords indicating
+	*   an area of the map that coordinates are restricted to
+	* @param {Number} spriteCount - the number of sprites to place on map and add to group
+	* @param {Object} group - the sprite group that represents the team's structures
+	* @param (String) key - the image resource with which to create the sprites
 	* @param {Object} game - Phaser game object
 	* 
 	*/
-	initStructures: function(coordsGenerator, playerGroup, enemyGroup, game){
-
+	initStructures: function(coordsGenerator, mapArea, spriteCount, group, key, game){
 		// load sawmills and dams in different parts of the map
 
 		//GameUtilities.randomReplaceTilesWithKey(mapGroup, "grass", "sawmill", 1.2, 0); // tile map version
 		//GameUtilities.randomReplaceTilesWithKey(mapGroup, "grass", "dam", 1.2, 1); // tile map version
-
-		for ( var i = 0; i < 1; i++ ) {
+/*
+		for ( var i = 0; i < 10; i++ ) {
 			var coords = coordsGenerator.getCoords(1);
 			var x = coords[0];
 			var y = coords[1];
@@ -40,31 +42,23 @@ var Structures = {
 			playerStructure.anchor.setTo(0, 0);
 			playerGroup.add(playerStructure);
 			playerStructure.inputEnabled = true;
-<<<<<<< HEAD
 			game.physics.arcade.enable(playerStructure);
-=======
-                        game.physics.arcade.enable(playerStructure);
 			playerStructure.HP = 10000;
->>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
-
 		}
-		
+*/	
 
-		for ( var i = 0; i < 1; i++ ) {
-			var coords = coordsGenerator.getCoords(2);
+		for ( var i = 0; i < spriteCount; i++ ) {
+			var coords = coordsGenerator.getCoords(mapArea);
 			var x = coords[0];
 			var y = coords[1];
-	
-			enemyStructure = game.add.sprite(x, y, 'dam');
-			enemyStructure.anchor.setTo(0, 0);
-			enemyGroup.add(enemyStructure);
-			enemyStructure.inputEnabled = true;
-<<<<<<< HEAD
-			game.physics.arcade.enable(enemyStructure);
-=======
-                        game.physics.arcade.enable(enemyStructure);
-			enemyStructure.HP = 10000;
->>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
+			var structure = group.create(x, y, key);
+			structure.Name = "Structure" + i;
+			structure.HP = 1000000;
+			structure.anchor.setTo(0, 0);
+			group.add(structure);
+			structure.inputEnabled = true;
+      		game.physics.arcade.enable(structure);
+			structure.HP = 10000;
 
 		}
 
@@ -110,6 +104,8 @@ var Structures = {
 		enemyStructureGroup,
 		mapGroup, // trees and berry bushes
 		resourcePoints,
+		playerUnits,
+		unitCount,
 		game){
 
 	    selectedStructure.inputEnabled = true;
@@ -120,7 +116,6 @@ var Structures = {
 		var originX = selectedStructure.position.x;
 		var originY = selectedStructure.position.y;
 
-
 		function onDragStart(sprite, pointer) {
 
 			//sprite.body.enable = true;
@@ -130,7 +125,8 @@ var Structures = {
 
 		function onDragStop(sprite, pointer) {
 
-		    console.log(sprite.key + " dropped at x:" + pointer.x + " y: " + pointer.y);
+//		    console.log(sprite.key + " dropped at x:" + pointer.x + " y: " + pointer.y);
+
 
 		    if (!game.physics.arcade.overlap(selectedStructure, playerStructureGroup) &&
 		    	!game.physics.arcade.overlap(selectedStructure, enemyStructureGroup) &&
@@ -138,24 +134,60 @@ var Structures = {
 		    // the structure will stay on the map, 
 		    // resource points get deducted, and replacement sprite will pop up in the ui at the bottom.
 		    {
-		        console.log('input disabled on', sprite.key);
-		        sprite.inputEnabled = false;
-
-<<<<<<< HEAD
+//		        console.log('input disabled on', sprite.key);
+		        sprite.input.disableDrag();
 		        sprite.sendToBack();  // We want this for the game map, I think - if it's not sending behind everything and then not visible
 
 		        uiGroup.remove(selectedStructure); // to remove from ui group so dragging is not checked on this sprite
 		        playerStructureGroup.add(selectedStructure);
+            selectedStructure.secondClick = false;
+            selectedStructure.events.onInputDown.add(function(itemBeingClicked) {
+                var spawnX;
+                var spawnY;
+                var TILE_LENGTH = 64;
+                if (!selectedStructure.secondClick) { 
+                    selectedStructure.secondClick = true;
+                    game.time.events.add(300, function(){
+                        selectedStructure.secondClick = false;
+                    }, this);
+                }
+                else {
+                        selectedStructure.secondClick = false;
+                    if (game.resources.lumber > 10 && game.resources.food > 10) {
+                        game.resources.lumber -= 10;
+                        game.resources.food -= 10;
+                        if (selectedStructure.position.x - TILE_LENGTH > 0)
+                            spawnX = selectedStructure.position.x - TILE_LENGTH;
+                        else
+                            spawnX = selectedStructure.position.x + 2*TILE_LENGTH;
+                        if (selectedStructure.position.y - TILE_LENGTH > 0)
+                            spawnY = selectedStructure.position.y - TILE_LENGTH;
+                        else
+                            spawnY = selectedStructure.position.y + 2*TILE_LENGTH;
+        var playerUnit = playerUnits.create(spawnX, spawnY, 'lumberjack');
+        playerUnit.Name = "playerUnit" + unitCount;
+        playerUnit.width = 40;
+        playerUnit.height = 40;
+        playerUnit.anchor.setTo(0, 0);
 
+        playerUnit.Name = "playerUnit" + unitCount;
+        playerUnit.HP = 100000;
+        game.physics.arcade.enable(playerUnit);
+        playerUnit.enableBody = true;
+        unitCount += 1;
+                    }
+                }
+	    }, this);
 		        // need to compensate for any camera displacement
 		        sprite.position.x += sprite.game.camera.x;
 		        sprite.position.y += sprite.game.camera.y;
 
-		        resourcePoints.lumber -= 5;
+
+		        game.resources.lumber -= 5;
 
 		        // replace resource tile
 		        replacementSprite = game.add.sprite(originX, originY, sprite.key);
-	            replacementSprite.anchor.setTo(0.5, 0.5);
+	            replacementSprite.anchor.setTo(0, 0);
 	            uiGroup.add(replacementSprite);
 	            this.enableStructureCreation(
 					uiGroup,
@@ -164,6 +196,8 @@ var Structures = {
 					enemyStructureGroup,
 					mapGroup, // trees and berry bushes
 					resourcePoints,
+                    playerUnits,
+                    unitCount,
 					game
 				);
 
@@ -171,7 +205,7 @@ var Structures = {
 		    else
 		        // end up back in the ui at the bottom (not get placed on map)
 		    {
-		        console.log("NOT PLACING NEW STRUCTURE");
+//		        console.log("NOT PLACING NEW STRUCTURE");
 
 		        sprite.position.x = originX;
 		        sprite.position.y = originY;
@@ -187,7 +221,7 @@ var Structures = {
 	update: function(addingStructureGroup, playerStructureGroup, enemyStructureGroup, mapGroup, game){
 	    // test collision with object
 	    var addingStructure;
-
+//			console.log(game);
 	    for (var i = 0; i < addingStructureGroup.length; i++){
 	    	addingStructure = addingStructureGroup.children[i];
 	    	if ( ! game.physics.arcade.overlap(addingStructure, playerStructureGroup, overlapCallback) &&
@@ -200,8 +234,12 @@ var Structures = {
 		    draggedStructure.tint = 0xFF0000; // red tint
 		    // 0xFFFFFF removes any tint
 		}
+	},
+
+	// can be called from game.js to stop drag-and-drop feature when game ends
+	disableStructureCreation: function(uiGroup){
+		for(var i = 0; i < uiGroup.children.length; i++) {
+		    uiGroup.children[i].input.enabled = false;
+		}
 	}
 }
-=======
-}
->>>>>>> b65bc8d117134f1d46e99d3f01c6cd1bc249ca21
