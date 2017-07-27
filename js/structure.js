@@ -105,6 +105,7 @@ var Structures = {
 		mapGroup, // trees and berry bushes
 		resourcePoints,
 		playerUnits,
+		computerUnits,
 		unitCount,
 		game){
 
@@ -130,11 +131,12 @@ var Structures = {
 
 		    if (!game.physics.arcade.overlap(selectedStructure, playerStructureGroup) &&
 		    	!game.physics.arcade.overlap(selectedStructure, enemyStructureGroup) &&
-		    	!game.physics.arcade.overlap(selectedStructure, mapGroup)) 
+		    	!game.physics.arcade.overlap(selectedStructure, mapGroup) &&
+		    	!game.physics.arcade.overlap(selectedStructure, playerUnits) &&
+		    	!game.physics.arcade.overlap(selectedStructure, computerUnits)) 
 		    // the structure will stay on the map, 
 		    // resource points get deducted, and replacement sprite will pop up in the ui at the bottom.
 		    {
-//		        console.log('input disabled on', sprite.key);
 		        sprite.input.disableDrag();
 		        sprite.sendToBack();  // We want this for the game map, I think - if it's not sending behind everything and then not visible
 
@@ -205,12 +207,9 @@ var Structures = {
 		    else
 		        // end up back in the ui at the bottom (not get placed on map)
 		    {
-//		        console.log("NOT PLACING NEW STRUCTURE");
-
 		        sprite.position.x = originX;
 		        sprite.position.y = originY;
 		        //sprite.body.enable = false;
-
 		    }
 
 		}
@@ -218,22 +217,45 @@ var Structures = {
 	},
 
 	// This should be called from the update function of the main game file.
-	update: function(addingStructureGroup, playerStructureGroup, enemyStructureGroup, mapGroup, game){
+	//update: function(addingStructureGroup, playerStructureGroup, enemyStructureGroup, mapGroup, game){
+	update: function(game, addingStructureGroup, otherGroups){
 	    // test collision with object
-	    var addingStructure;
+	    /*
+	    var overlappingStructure;
 //			console.log(game);
+		var overlapping = false;
+
+		for (var i = 0; i < otherGroups.length; i++){
+			for (var j = 0; j < addingStructureGroup.length; j++){
+				game.physics.arcade.overlap( addingStructureGroup.children[j], otherGroups[i], overlapCallback );
+			}
+			if ( (! overlapping) ) {
+				overlappingStructure.tint = 0xFFFFFF; // removes any tint
+			}
+		}
+
+		function overlapCallback(draggedStructure, mapStructure){
+		    draggedStructure.tint = 0xFF0000; // red tint
+		    overlappingStructure = draggedStructure;
+		    overlapping = true;
+		}
+		*/
+		
 	    for (var i = 0; i < addingStructureGroup.length; i++){
 	    	addingStructure = addingStructureGroup.children[i];
-	    	if ( ! game.physics.arcade.overlap(addingStructure, playerStructureGroup, overlapCallback) &&
-	    		! game.physics.arcade.overlap(addingStructure, enemyStructureGroup, overlapCallback) &&
-	    		! game.physics.arcade.overlap(addingStructure, mapGroup, overlapCallback))
-		        addingStructure.tint = 0xFFFFFF;
-		    };
+	    	if ( ! game.physics.arcade.overlap(addingStructure, otherGroups[0], overlapCallback) &&
+	    		! game.physics.arcade.overlap(addingStructure, otherGroups[1], overlapCallback) &&
+	    		! game.physics.arcade.overlap(addingStructure, otherGroups[2], overlapCallback) &&
+	    		! game.physics.arcade.overlap(addingStructure, otherGroups[3], overlapCallback) &&
+	    		! game.physics.arcade.overlap(addingStructure, otherGroups[4], overlapCallback))
+		        addingStructure.tint = 0xFFFFFF; // removes any tint
+		};
+
 
 	    function overlapCallback(draggedStructure, mapStructure){
 		    draggedStructure.tint = 0xFF0000; // red tint
-		    // 0xFFFFFF removes any tint
 		}
+		
 	},
 
 	// can be called from game.js to stop drag-and-drop feature when game ends
