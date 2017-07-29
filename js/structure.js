@@ -14,6 +14,9 @@ function Structure(game) {
 /* Performs various operations related to structures */
 var Structures = {
 
+	HIT_POINTS: 5000,
+	HIT_DEDUCTION: 5,
+
 	/**
 	* may be used after tile map is loaded
 	* requires gameUtilities.js
@@ -53,7 +56,7 @@ var Structures = {
 			var y = coords[1];
 			var structure = group.create(x, y, key);
 			structure.Name = "Structure" + i;
-			structure.HP = 1000000;
+			//structure.HP = 1000000;
 			structure.anchor.setTo(0, 0);
 			group.add(structure);
 			structure.inputEnabled = true;
@@ -107,7 +110,8 @@ var Structures = {
 		playerUnits,
 		computerUnits,
 		unitCount,
-		game){
+		game)
+	{
 
 	    selectedStructure.inputEnabled = true;
 	    selectedStructure.input.enableDrag();
@@ -126,9 +130,6 @@ var Structures = {
 
 		function onDragStop(sprite, pointer) {
 
-//		    console.log(sprite.key + " dropped at x:" + pointer.x + " y: " + pointer.y);
-
-
 		    if (!game.physics.arcade.overlap(selectedStructure, playerStructureGroup) &&
 		    	!game.physics.arcade.overlap(selectedStructure, enemyStructureGroup) &&
 		    	!game.physics.arcade.overlap(selectedStructure, mapGroup) &&
@@ -142,44 +143,45 @@ var Structures = {
 
 		        uiGroup.remove(selectedStructure); // to remove from ui group so dragging is not checked on this sprite
 		        playerStructureGroup.add(selectedStructure);
-            selectedStructure.secondClick = false;
-            selectedStructure.events.onInputDown.add(function(itemBeingClicked) {
-                var spawnX;
-                var spawnY;
-                var TILE_LENGTH = 64;
-                if (!selectedStructure.secondClick) { 
-                    selectedStructure.secondClick = true;
-                    game.time.events.add(300, function(){
-                        selectedStructure.secondClick = false;
-                    }, this);
-                }
-                else {
-                        selectedStructure.secondClick = false;
-                    if (game.resources.lumber > 10 && game.resources.food > 10) {
-                        game.resources.lumber -= 10;
-                        game.resources.food -= 10;
-                        if (selectedStructure.position.x - TILE_LENGTH > 0)
-                            spawnX = selectedStructure.position.x - TILE_LENGTH;
-                        else
-                            spawnX = selectedStructure.position.x + 2*TILE_LENGTH;
-                        if (selectedStructure.position.y - TILE_LENGTH > 0)
-                            spawnY = selectedStructure.position.y - TILE_LENGTH;
-                        else
-                            spawnY = selectedStructure.position.y + 2*TILE_LENGTH;
-        var playerUnit = playerUnits.create(spawnX, spawnY, 'lumberjack');
-        playerUnit.Name = "playerUnit" + unitCount;
-        playerUnit.width = 40;
-        playerUnit.height = 40;
-        playerUnit.anchor.setTo(0, 0);
+	            selectedStructure.secondClick = false;
+	            selectedStructure.events.onInputDown.add(function(itemBeingClicked) {
+	                var spawnX;
+	                var spawnY;
+	                var TILE_LENGTH = 64;
+	                if (!selectedStructure.secondClick) { 
+	                    selectedStructure.secondClick = true;
+	                    game.time.events.add(300, function(){
+	                        selectedStructure.secondClick = false;
+	                    }, this);
+	                }
+	                else {
+	                        selectedStructure.secondClick = false;
+	                    if (game.resources.lumber > 10 && game.resources.food > 10) {
+	                        game.resources.lumber -= 10;
+	                        game.resources.food -= 10;
+	                        if (selectedStructure.position.x - TILE_LENGTH > 0)
+	                            spawnX = selectedStructure.position.x - TILE_LENGTH;
+	                        else
+	                            spawnX = selectedStructure.position.x + 2*TILE_LENGTH;
+	                        if (selectedStructure.position.y - TILE_LENGTH > 0)
+	                            spawnY = selectedStructure.position.y - TILE_LENGTH;
+	                        else
+	                            spawnY = selectedStructure.position.y + 2*TILE_LENGTH;
 
-        playerUnit.Name = "playerUnit" + unitCount;
-        playerUnit.HP = 100000;
-        game.physics.arcade.enable(playerUnit);
-        playerUnit.enableBody = true;
-        unitCount += 1;
-                    }
-                }
-	    }, this);
+					        var playerUnit = playerUnits.create(spawnX, spawnY, 'lumberjack');
+					        playerUnit.Name = "playerUnit" + unitCount;
+					        playerUnit.width = 40;
+					        playerUnit.height = 40;
+					        playerUnit.anchor.setTo(0, 0);
+
+					        playerUnit.Name = "playerUnit" + unitCount;
+					        playerUnit.HP = 100000;
+					        game.physics.arcade.enable(playerUnit);
+					        playerUnit.enableBody = true;
+					        unitCount += 1;
+                    	}
+                	}
+	    		}, this);
 		        // need to compensate for any camera displacement
 		        sprite.position.x += sprite.game.camera.x;
 		        sprite.position.y += sprite.game.camera.y;
@@ -190,6 +192,7 @@ var Structures = {
 		        // replace resource tile
 		        replacementSprite = game.add.sprite(originX, originY, sprite.key);
 	            replacementSprite.anchor.setTo(0, 0);
+	            replacementSprite.HP = Structures.HIT_POINTS;
 	            uiGroup.add(replacementSprite);
 	            this.enableStructureCreation(
 					uiGroup,
@@ -199,10 +202,10 @@ var Structures = {
 					mapGroup, // trees and berry bushes
 					resourcePoints,
                     playerUnits,
+                    computerUnits,
                     unitCount,
 					game
 				);
-
 		    }
 		    else
 		        // end up back in the ui at the bottom (not get placed on map)
@@ -261,7 +264,44 @@ var Structures = {
 	// can be called from game.js to stop drag-and-drop feature when game ends
 	disableStructureCreation: function(uiGroup){
 		for(var i = 0; i < uiGroup.children.length; i++) {
-		    uiGroup.children[i].input.enabled = false;
+			if ( uiGroup.children[i].input )
+		    	uiGroup.children[i].input.enabled = false;
 		}
+	},
+
+	/* Called in update to damage the structure.
+		When structure.HP reaches 0, the structure will be destroyed. */
+	damage: function(game, structure){
+		
+		if (!structure.HP) {
+			structure.HP = this.HIT_POINTS;
+		}
+
+		if (structure.HP && structure.HP > 0){
+			structure.HP -= 5;
+		}
+
+		if ( (structure.HP < this.HIT_POINTS / 2) && (structure.halfDamaged == undefined) ) {
+			// swap out original structure image for half destroyed equivalent
+			structure.loadTexture('structure', 0, false);
+			structure.halfDamaged = true;
+
+			// show explosion?
+			//game.load.spritesheet('explosion', 'assets/structures/exp2.png', 64, 64, 16);
+			structure.explosion = game.add.sprite(structure.position.x, structure.position.y, 'explosion');
+			structure.explosion.animations.add('explode', [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
+			structure.explosion.animations.play('explode', 10, true);
+
+		}
+
+		if (structure.HP <= 0){
+			if (structure.explosion) {
+				structure.explosion.animations.stop(null, true);
+			}
+			structure.explosion.destroy();
+			// remove structure from game
+			structure.destroy();
+		}
+
 	}
 }

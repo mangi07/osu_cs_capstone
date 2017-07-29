@@ -217,3 +217,16 @@ function separateOverlappingTreesBerryBushes(newSprite, mapGroup){
 	}
 
 }
+
+function debugAttackUndefined(game) {
+    var groups = [playerStructureGroup, enemyStructureGroup, playerUnits, computerUnits];
+    var groupNames = ["playerStructureGroup", "enemyStructureGroup", "playerUnits", "enemyUnits"];
+    for (var i = 0; i < groups.length; i++){
+        for (var j = 0; j < groups[i].children.length; j++){
+            //if ( (groups[i].children[j].Attack) && 
+                //(groups[i].children[j].Attack == undefined) ){
+                alert(groupNames[i] + " #" + j + " property Attack: " + groups[i].children[j].Attack);
+            //}
+        }
+    }
+}

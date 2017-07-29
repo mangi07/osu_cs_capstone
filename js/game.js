@@ -138,8 +138,9 @@ window.onload = function () {
                 for (var j = 0; j < playerUnits.children.length; j++) { // suggest var j = i if it helps performance
                     game.physics.arcade.overlap(playerUnits.children[i], playerUnits.children[j], stopUnit, null, this);
                 }
+                // TODO: units get stuck on overlap
                 game.physics.arcade.overlap(playerUnits.children[i], playerStructureGroup, healUnit, null, this);
-                game.physics.arcade.overlap(playerUnits.children[i], enemyStructureGroup, unitCombat, null, this);
+                game.physics.arcade.overlap(playerUnits.children[i], enemyStructureGroup, structureDamage, null, this);
 
 
             }
@@ -151,7 +152,7 @@ window.onload = function () {
                     game.physics.arcade.overlap(computerUnits.children[i], computerUnits.children[j], stopUnit, null, this);
                 }
                 game.physics.arcade.overlap(computerUnits.children[i], enemyStructureGroup, healUnit, null, this);
-                game.physics.arcade.overlap(computerUnits.children[i], playerStructureGroup, unitCombat, null, this);
+                game.physics.arcade.overlap(computerUnits.children[i], playerStructureGroup, structureDamage, null, this);
             }
 
             // check overlap of each player unit with a computer unit
@@ -180,6 +181,7 @@ window.onload = function () {
                 unit.body.velocity.y = 0;
             });
             Structures.disableStructureCreation(uiGroup);
+            game.time.events.removeAll();
         }
         checkGameOver();
     }
@@ -274,10 +276,6 @@ window.onload = function () {
 
             game['destPoint' + unit.name].enableBody = true;
             game.physics.arcade.enable(game['destPoint' + unit.name]);
-            console.log("UNIT: ");
-            console.log(unit);
-            console.log("game[blah blah]: ");
-            console.log(game['destPoint' + unit.name]);
             game.physics.arcade.moveToObject(unit, game['destPoint' + unit.name], VELOCITY);
         }
     }
@@ -343,6 +341,9 @@ window.onload = function () {
         if (enemy.HP < 0)
             enemy.destroy();
     }
+    function structureDamage(player, structure){
+        Structures.damage(game, structure)
+    }
 
     function initResourceCount() {
         game.resources = { lumber: STARTINGLUMBER, food: STARTINGFOOD };
@@ -395,6 +396,8 @@ window.onload = function () {
         game.load.image('lumberjack', 'assets/units/lumberjack.png');
         game.load.image('bear', 'assets/units/bear.png');
         game.load.image('woodsman', 'assets/units/woodsman.png');
+        game.load.spritesheet('explosion', 'assets/structures/exp2.png', 64, 64, 16);
+        //game.load.image('explosion', 'assets/structures/exp2.png');
     }
 
     function loadSounds() {
@@ -798,7 +801,7 @@ window.onload = function () {
 //   .then(data => {
 //       return data;
 //   });
-    
 
+    
 
 };
