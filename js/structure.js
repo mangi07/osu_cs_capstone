@@ -14,6 +14,8 @@ function Structure(game) {
 /* Performs various operations related to structures */
 var Structures = {
 
+        TILE_LENGTH: 64,
+        DISTANCE_LIMIT: 96,
 	/**
 	* may be used after tile map is loaded
 	* requires gameUtilities.js
@@ -126,11 +128,16 @@ var Structures = {
 		function onDragStop(sprite, pointer) {
 
 //		    console.log(sprite.key + " dropped at x:" + pointer.x + " y: " + pointer.y);
-
-
+                        var nearbyUnit = false;
+                        playerUnits.forEach(function (s) {
+                            var dist = Phaser.Math.distance(s.x, s.y, game.camera.x+sprite.x, game.camera.y+sprite.y); 
+                            if (dist < this.DISTANCE_LIMIT)
+                                nearbyUnit = true;
+                        }, this);
 		    if (!game.physics.arcade.overlap(selectedStructure, playerStructureGroup) &&
 		    	!game.physics.arcade.overlap(selectedStructure, enemyStructureGroup) &&
-		    	!game.physics.arcade.overlap(selectedStructure, mapGroup)) 
+		    	!game.physics.arcade.overlap(selectedStructure, mapGroup) &&
+                        nearbyUnit)
 		    // the structure will stay on the map, 
 		    // resource points get deducted, and replacement sprite will pop up in the ui at the bottom.
 		    {
@@ -144,7 +151,6 @@ var Structures = {
             selectedStructure.events.onInputDown.add(function(itemBeingClicked) {
                 var spawnX;
                 var spawnY;
-                var TILE_LENGTH = 64;
                 if (!selectedStructure.secondClick) { 
                     selectedStructure.secondClick = true;
                     game.time.events.add(300, function(){
@@ -156,14 +162,14 @@ var Structures = {
                     if (game.resources.lumber > 10 && game.resources.food > 10) {
                         game.resources.lumber -= 10;
                         game.resources.food -= 10;
-                        if (selectedStructure.position.x - TILE_LENGTH > 0)
-                            spawnX = selectedStructure.position.x - TILE_LENGTH;
+                        if (selectedStructure.position.x - this.TILE_LENGTH > 0)
+                            spawnX = selectedStructure.position.x - this.TILE_LENGTH;
                         else
-                            spawnX = selectedStructure.position.x + 2*TILE_LENGTH;
-                        if (selectedStructure.position.y - TILE_LENGTH > 0)
-                            spawnY = selectedStructure.position.y - TILE_LENGTH;
+                            spawnX = selectedStructure.position.x + 2*this.TILE_LENGTH;
+                        if (selectedStructure.position.y - this.TILE_LENGTH > 0)
+                            spawnY = selectedStructure.position.y - this.TILE_LENGTH;
                         else
-                            spawnY = selectedStructure.position.y + 2*TILE_LENGTH;
+                            spawnY = selectedStructure.position.y + 2*this.TILE_LENGTH;
         var playerUnit = playerUnits.create(spawnX, spawnY, 'lumberjack');
         playerUnit.Name = "playerUnit" + unitCount;
         playerUnit.width = 40;
@@ -172,6 +178,9 @@ var Structures = {
 
         playerUnit.Name = "playerUnit" + unitCount;
         playerUnit.HP = 100000;
+        playerUnit.lumber = 0;
+        playerUnit.food = 0;
+
         game.physics.arcade.enable(playerUnit);
         playerUnit.enableBody = true;
         unitCount += 1;
@@ -188,6 +197,7 @@ var Structures = {
 		        // replace resource tile
 		        replacementSprite = game.add.sprite(originX, originY, sprite.key);
 	            replacementSprite.anchor.setTo(0, 0);
+                    replacementSprite.type = 'structure';
 	            uiGroup.add(replacementSprite);
 	            this.enableStructureCreation(
 					uiGroup,
@@ -218,17 +228,29 @@ var Structures = {
 	},
 
 	// This should be called from the update function of the main game file.
-	update: function(addingStructureGroup, playerStructureGroup, enemyStructureGroup, mapGroup, game){
+	update: function(addingStructureGroup, playerStructureGroup, enemyStructureGroup, mapGroup, playerUnits, game){
 	    // test collision with object
 	    var addingStructure;
 //			console.log(game);
 	    for (var i = 0; i < addingStructureGroup.length; i++){
 	    	addingStructure = addingStructureGroup.children[i];
+                
 	    	if ( ! game.physics.arcade.overlap(addingStructure, playerStructureGroup, overlapCallback) &&
 	    		! game.physics.arcade.overlap(addingStructure, enemyStructureGroup, overlapCallback) &&
-	    		! game.physics.arcade.overlap(addingStructure, mapGroup, overlapCallback))
+	    		! game.physics.arcade.overlap(addingStructure, mapGroup, overlapCallback)) 
 		        addingStructure.tint = 0xFFFFFF;
-		    };
+            if (addingStructure.type == 'structure')
+            {
+                        var nearbyUnit = false;
+                        playerUnits.forEach(function (s) {
+                            var dist = Phaser.Math.distance(s.x, s.y, game.camera.x+addingStructure.x, game.camera.y+addingStructure.y); 
+                            if (dist < this.DISTANCE_LIMIT)
+                                nearbyUnit = true;
+                        }, this);
+                if (!nearbyUnit)
+	            addingStructure.tint = 0xFF0000;
+            }
+		    }
 
 	    function overlapCallback(draggedStructure, mapStructure){
 		    draggedStructure.tint = 0xFF0000; // red tint
