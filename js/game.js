@@ -49,6 +49,7 @@ window.onload = function () {
     var uiResourceText;
     var selectWindow;
     var selectWindowFlag;
+    var selectionChange;
   
     var units = {};
     //change this to a loop over an array of unit types??
@@ -104,7 +105,7 @@ window.onload = function () {
 
         selectWindowFlag = false;
 
-        game.input.mousePointer.leftButton.onUp.add(selectUnit, this);
+        game.input.mousePointer.leftButton.onDown.add(selectUnit, this);
 
         game.input.mousePointer.rightButton.onUp.add(moveUnit, this)
         gameOver = false;
@@ -142,7 +143,11 @@ window.onload = function () {
             }
             playerUnits.forEach(function(unit) {
                 if (unit.gather)
-                    playerCollectResourceAI(unit);
+                    collectResourceAI(unit, playerStructureGroup);
+            });
+            computerUnits.forEach(function(unit) {
+                if (unit.gather)
+                    collectResourceAI(unit, enemyStructureGroup);
             });
             if (game.input.mousePointer.leftButton.ctrlKey) {
                 game.input.mousePointer.leftButton.ctrlKey = false;
@@ -151,7 +156,7 @@ window.onload = function () {
                     selectWindow.y = game.camera.y + game.input.activePointer.y;
                     selectWindowFlag = true;
                     graphics = game.add.graphics(0, 0); 
-                    graphics.beginFill(0xff0000);
+                    graphics.beginFill(0x00FFFF);
                     graphics.drawRect(selectWindow.x, selectWindow.y, 10, 10);
                     graphics.endFill();
                 }
@@ -258,10 +263,13 @@ window.onload = function () {
     }
 
     function selectUnit() {
+      if (game.input.activePointer.y < CAMERA_HEIGHT-UI_HEIGHT) {
         //console.log(selectedUnit);
         //console.log(selectedStructure);
         //console.log(playerUnits);
+        selectionChange = true;
         selectedUnit = [];
+        selectedStructure = null;
         for (i = 0; i < playerUnits.children.length; i++) {
             playerUnits.children[i].tint = 0xFFFFFF;
             if (Phaser.Rectangle.contains(playerUnits.children[i].body, this.game.input.activePointer.x + game.camera.x, this.game.input.activePointer.y + game.camera.y)) {
@@ -272,15 +280,18 @@ window.onload = function () {
             }
         }
         for (i = 0; i < playerStructureGroup.children.length; i++) {
-            playerStructureGroup.children[i].tint = 0xFFFFFF;
             //console.log(playerStructureGroup);
             if (Phaser.Rectangle.contains(playerStructureGroup.children[i].body, this.game.input.activePointer.x + game.camera.x, this.game.input.activePointer.y + game.camera.y)) {
                 selectedStructure = playerStructureGroup.children[i];
-                playerStructureGroup.children[i].tint = 0xFFDF00;
-                selectedUnit = [];
-                return;
+                if (selectedStructure.tint != 0x00FFFF) {
+                    playerStructureGroup.children[i].tint = 0xFFDF00;
+                    selectedUnit = [];
+                }
             }
+            else if (playerStructureGroup.children[i].tint == 0xFFDF00)
+                playerStructureGroup.children[i].tint = 0xFFFFFF;
         }
+      }
     }
 
     function moveUnit() {
@@ -297,8 +308,8 @@ window.onload = function () {
               if (game['destPoint' + selectedUnit[i].name]) {
                 game['destPoint' + selectedUnit[i].name].kill();
               }
-            //game['destPoint' + selectedUnit[i].name] = game.add.sprite(selectedUnit[i].x + xOffset, selectedUnit[i].y + yOffset);
               if (selectedUnit[i].alive) {
+                selectedUnit[i].gather = false;
                 game['destPoint' + selectedUnit[i].name] = game.add.sprite(game.camera.x + game.input.activePointer.x + (i%3)*TILE_LENGTH, game.camera.y + game.input.activePointer.y + Math.floor(i/3)*TILE_LENGTH);
                 game['destPoint' + selectedUnit[i].name].width = 10;
                 game['destPoint' + selectedUnit[i].name].height = 10;
@@ -331,9 +342,8 @@ window.onload = function () {
 
     function render() {
 
-        game.debug.cameraInfo(game.camera, 32, 32);
-        game.debug.pointer(game.input.mousePointer);
-        //game.debug.geom(selectWindow, '#0FFFFF');
+        //game.debug.cameraInfo(game.camera, 32, 32);
+        //game.debug.pointer(game.input.mousePointer);
     }
 
     function stopUnit(unit, destSprite) {
@@ -382,9 +392,13 @@ window.onload = function () {
         if (playerUnits.getIndex(unit) > -1) {
             game.resources.lumber += unit.lumber;
             game.resources.food += unit.food;
-            unit.lumber = 0;
-            unit.food = 0;
         }
+        else {
+            enemyLumber += unit.lumber;
+            enemyFood += unit.food;
+        }
+        unit.lumber = 0;
+        unit.food = 0;
         //console.log(unit.HP);
     }
     function unitCombat(player, enemy) {
@@ -535,32 +549,6 @@ window.onload = function () {
         
         //borrowed from: http://www.andy-howard.com/how-to-double-click-in-phaser/index.html on 7/12/17
         playerStructureGroup.forEach(function(structure) {
-            structure.secondClick = false;
-            structure.events.onInputDown.add(function(itemBeingClicked) {
-                if (!structure.secondClick) { 
-                    structure.secondClick = true;
-                    game.time.events.add(300, function(){
-                        structure.secondClick = false;
-                    }, this);
-                }
-                else {
-                    structure.secondClick = false;
-                    if (game.resources.lumber > 10 && game.resources.food > 10) {
-                        game.resources.lumber -= 10;
-                        game.resources.food -= 10;
-                        if (structure.position.x - TILE_LENGTH > 0)
-                            spawnX = structure.position.x - TILE_LENGTH;
-                        else
-                            spawnX = structure.position.x + 2*TILE_LENGTH;
-                        if (structure.position.y - TILE_LENGTH > 0)
-                            spawnY = structure.position.y - TILE_LENGTH;
-                        else
-                            spawnY = structure.position.y + 2*TILE_LENGTH;
-                        spawnPlayerUnit(spawnX, spawnY, 'lumberjack');
-                    }
-                }
-
-            }, this);
             playerStructureGroup.enableBody = true;
         });
 
@@ -590,7 +578,7 @@ window.onload = function () {
             uiSprite = game.add.sprite(x, y, structureSprites[i-1]);
             uiSprite.anchor.setTo(0, 0);
             uiSprite.type = 'structure';
-
+            uiSprite.num = i;
             uiGroup.add(uiSprite);
 
             Structures.enableStructureCreation(
@@ -629,16 +617,180 @@ window.onload = function () {
     function updateUIText() {
         //console.log(selectedUnit[i]);
         uiResourceText.setText("Lumber: " + game.resources.lumber + "   Food: " + game.resources.food);
-i = 0;
+        i = 0;
         if (selectedUnit[i]) {
-            uiUnitText
             uiUnitText.setText("Selected Unit: " + (selectedUnit[i] && selectedUnit[i].type ? selectedUnit[i].type : "None") + "\nHealth: " + selectedUnit[i].HP + "\nAttack: " + selectedUnit[i].Attack + "\nDefense: " + selectedUnit[i].Defense);
             uiUnitResourceText.setText("Lumber: " + selectedUnit[i].lumber + "\nFood: " + selectedUnit[i].food);
+            uiSelectedUnit.visible = true;
             uiSelectedUnit.loadTexture(selectedUnit[i].key, 0, false);
+            if (selectionChange) {
+            selectionChange = false;
+            uiGroup.forEach(function(sprite) {
+              if (sprite.type == 'unit') {
+                if (sprite.num == 1) {
+            var sawmill = game.add.sprite(sprite.position.x, sprite.position.y, 'sawmill');
+            sawmill.anchor.setTo(0, 0);
+            sawmill.type = 'structure';
+            sawmill.num = 1;
+            uiGroup.replace(sprite, sawmill);
+            Structures.enableStructureCreation(
+              uiGroup,
+              sawmill,
+              playerStructureGroup,
+              enemyStructureGroup,
+              mapGroup,
+              resources,
+              playerUnits,
+              playerUnitCount,
+              game
+            );
+                }
+                else if (sprite.num == 2) {
+            var structure = game.add.sprite(sprite.position.x, sprite.position.y, 'structure');
+            structure.anchor.setTo(0, 0);
+            structure.type = 'structure';
+            structure.num = 2;
+            uiGroup.replace(sprite, structure);
+            Structures.enableStructureCreation(
+              uiGroup,
+              structure,
+              playerStructureGroup,
+              enemyStructureGroup,
+              mapGroup,
+              resources,
+              playerUnits,
+              playerUnitCount,
+              game
+            );
+                }
+              }
+            });
+            }
         }
         else if (selectedStructure) {
             uiUnitText.setText("HitPoints: " + selectedStructure.HP);
+            uiUnitResourceText.setText("");
+            uiSelectedUnit.visible = true;
             uiSelectedUnit.loadTexture(selectedStructure.key, 0, false);
+            if (selectionChange) {
+            selectionChange = false;
+            uiGroup.forEach(function(sprite) {
+              if (sprite.type == 'structure') {
+                if (sprite.num == 1) {
+            lumberjack = game.add.sprite(sprite.position.x, sprite.position.y, 'lumberjack');
+            lumberjack.width = 40;
+            lumberjack.height = 40;
+            lumberjack.anchor.setTo(0, 0);
+            lumberjack.type = 'unit';
+            lumberjack.num = 1;
+            uiGroup.replace(sprite, lumberjack);
+            lumberjack.inputEnabled = true;
+            lumberjack.events.onInputDown.add(function() {
+                    if (game.resources.lumber >= 10 &&
+                        game.resources.food >= 10 &&
+                        selectedStructure.tint != 0x00FFFF) {
+                        selectedStructure.tint = 0x00FFFF;
+                        var selStruct = selectedStructure;
+                        game.time.events.add(5000, function() {
+                            selStruct.tint = 0xFFFFFF;
+                        }, this);
+                        game.resources.lumber -= 10;
+                        game.resources.food -= 10;
+                        if (selectedStructure.position.x - TILE_LENGTH > 0)
+                            spawnX = selectedStructure.position.x - TILE_LENGTH;
+                        else
+                            spawnX = selectedStructure.position.x + 2*TILE_LENGTH;
+                        if (selectedStructure.position.y - TILE_LENGTH > 0)
+                            spawnY = selectedStructure.position.y - TILE_LENGTH;
+                        else
+                            spawnY = selectedStructure.position.y + 2*TILE_LENGTH;
+                        spawnPlayerUnit(spawnX, spawnY, 'lumberjack');
+                    }
+            }, this);
+                }
+                else if (sprite.num == 2) {
+            woodsman = game.add.sprite(sprite.position.x, sprite.position.y, 'woodsman');
+            woodsman.width = 40;
+            woodsman.height = 40;
+            woodsman.anchor.setTo(0, 0);
+            woodsman.type = 'unit';
+            woodsman.num = 2;
+            uiGroup.replace(sprite, woodsman);
+            woodsman.inputEnabled = true;
+            woodsman.events.onInputDown.add(function() {
+                    if (game.resources.lumber >= 10 &&
+                        game.resources.food >= 10 &&
+                        selectedStructure.tint != 0x00FFFF) {
+                        selectedStructure.tint = 0x00FFFF;
+                        var selStruct = selectedStructure;
+                        game.time.events.add(5000, function() {
+                            selStruct.tint = 0xFFFFFF;
+                        }, this);
+                        game.resources.lumber -= 10;
+                        game.resources.food -= 10;
+                        if (selectedStructure.position.x - TILE_LENGTH > 0)
+                            spawnX = selectedStructure.position.x - TILE_LENGTH;
+                        else
+                            spawnX = selectedStructure.position.x + 2*TILE_LENGTH;
+                        if (selectedStructure.position.y - TILE_LENGTH > 0)
+                            spawnY = selectedStructure.position.y - TILE_LENGTH;
+                        else
+                            spawnY = selectedStructure.position.y + 2*TILE_LENGTH;
+                        spawnPlayerUnit(spawnX, spawnY, 'woodsman');
+                    }
+            }, this);
+                }
+              }
+            });
+            }
+        }
+        else {
+            uiUnitText.setText("");
+            uiUnitResourceText.setText("");
+            uiSelectedUnit.visible = false;
+            if (selectionChange) {
+            selectionChange = false;
+            uiGroup.forEach(function(sprite) {
+              if (sprite.type == 'unit') {
+                if (sprite.num == 1) {
+            var sawmill = game.add.sprite(sprite.position.x, sprite.position.y, 'sawmill');
+            sawmill.anchor.setTo(0, 0);
+            sawmill.type = 'structure';
+            sawmill.num = 1;
+            uiGroup.replace(sprite, sawmill);
+            Structures.enableStructureCreation(
+              uiGroup,
+              sawmill,
+              playerStructureGroup,
+              enemyStructureGroup,
+              mapGroup,
+              resources,
+              playerUnits,
+              playerUnitCount,
+              game
+            );
+                }
+                else if (sprite.num == 2) {
+            var structure = game.add.sprite(sprite.position.x, sprite.position.y, 'structure');
+            structure.anchor.setTo(0, 0);
+            structure.type = 'structure';
+            structure.num = 2;
+            uiGroup.replace(sprite, structure);
+            Structures.enableStructureCreation(
+              uiGroup,
+              structure,
+              playerStructureGroup,
+              enemyStructureGroup,
+              mapGroup,
+              resources,
+              playerUnits,
+              playerUnitCount,
+              game
+            );
+                }
+              }
+            });
+            }
         }
 
         uiSelectedUnit.width = UI_HEIGHT;
@@ -744,9 +896,9 @@ i = 0;
 
     }
 
-    function playerCollectResourceAI(unit) {
+    function collectResourceAI(unit, structureGroup) {
         var closestResource;
-        var nearestHome = playerStructureGroup.getTop();
+        var nearestHome = structureGroup.getBottom();
         if ((unit.resourceType == 'tree' && unit.lumber == 0) ||
             (unit.resourceType == 'berry' && unit.food == 0) ) {
             
@@ -764,10 +916,10 @@ i = 0;
         var closestResource;
         var compUnit1 = computerUnits.getChildAt(0);
         var compUnit2 = computerUnits.getChildAt(1);
-        closestResource = mapGroup.getClosestTo(enemyStructureGroup.getTop(), function(resource){return resource.type == 'tree';});
-        moveCompUnit(compUnit1, closestResource.body.position.x, closestResource.body.position.y);
-        closestResource = mapGroup.getClosestTo(enemyStructureGroup.getTop(), function(resource){return resource.type == 'berry';});
-        moveCompUnit(compUnit2, closestResource.body.position.x, closestResource.body.position.y);
+        compUnit1.gather = true;
+        compUnit1.resourceType = 'tree';
+        compUnit2.gather = true;
+        compUnit2.resourceType = 'berry';
         compCollectUnit1 = compUnit1;
         compCollectUnit2 = compUnit2;
       }
@@ -776,7 +928,7 @@ i = 0;
 
     function spawnUnitAI() {
         var compStruct1 = enemyStructureGroup.getTop();
-        if (enemyLumber > 10 && enemyFood > 10) {
+        if (enemyLumber >= 10 && enemyFood >= 10) {
             spawnEnemyUnit(compStruct1.position.x - TILE_LENGTH, compStruct1.position.y - TILE_LENGTH, "beaver");
             enemyLumber -= 10;
             enemyFood -= 10;
