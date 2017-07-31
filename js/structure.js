@@ -14,9 +14,10 @@ function Structure(game) {
 /* Performs various operations related to structures */
 var Structures = {
 
+        TILE_LENGTH: 64,
+        DISTANCE_LIMIT: 96,
 	HIT_POINTS: 5000,
 	HIT_DEDUCTION: 5,
-
 	/**
 	* may be used after tile map is loaded
 	* requires gameUtilities.js
@@ -129,69 +130,44 @@ var Structures = {
 		}
 
 		function onDragStop(sprite, pointer) {
-
+                        var nearbyUnit = false;
+                        playerUnits.forEach(function (s) {
+                            var dist = Phaser.Math.distance(s.x, s.y, game.camera.x+sprite.x, game.camera.y+sprite.y); 
+                            if (dist < this.DISTANCE_LIMIT)
+                                nearbyUnit = true;
+                        }, this);
 		    if (!game.physics.arcade.overlap(selectedStructure, playerStructureGroup) &&
 		    	!game.physics.arcade.overlap(selectedStructure, enemyStructureGroup) &&
 		    	!game.physics.arcade.overlap(selectedStructure, mapGroup) &&
 		    	!game.physics.arcade.overlap(selectedStructure, playerUnits) &&
-		    	!game.physics.arcade.overlap(selectedStructure, computerUnits)) 
+		    	!game.physics.arcade.overlap(selectedStructure, computerUnits) &&
+           nearbyUnit) 
 		    // the structure will stay on the map, 
 		    // resource points get deducted, and replacement sprite will pop up in the ui at the bottom.
 		    {
 		        sprite.input.disableDrag();
 		        sprite.sendToBack();  // We want this for the game map, I think - if it's not sending behind everything and then not visible
 
-		        uiGroup.remove(selectedStructure); // to remove from ui group so dragging is not checked on this sprite
-		        playerStructureGroup.add(selectedStructure);
-	            selectedStructure.secondClick = false;
-	            selectedStructure.events.onInputDown.add(function(itemBeingClicked) {
-	                var spawnX;
-	                var spawnY;
-	                var TILE_LENGTH = 64;
-	                if (!selectedStructure.secondClick) { 
-	                    selectedStructure.secondClick = true;
-	                    game.time.events.add(300, function(){
-	                        selectedStructure.secondClick = false;
-	                    }, this);
-	                }
-	                else {
-	                        selectedStructure.secondClick = false;
-	                    if (game.resources.lumber > 10 && game.resources.food > 10) {
-	                        game.resources.lumber -= 10;
-	                        game.resources.food -= 10;
-	                        if (selectedStructure.position.x - TILE_LENGTH > 0)
-	                            spawnX = selectedStructure.position.x - TILE_LENGTH;
-	                        else
-	                            spawnX = selectedStructure.position.x + 2*TILE_LENGTH;
-	                        if (selectedStructure.position.y - TILE_LENGTH > 0)
-	                            spawnY = selectedStructure.position.y - TILE_LENGTH;
-	                        else
-	                            spawnY = selectedStructure.position.y + 2*TILE_LENGTH;
-
-					        var playerUnit = playerUnits.create(spawnX, spawnY, 'lumberjack');
-					        playerUnit.Name = "playerUnit" + unitCount;
-					        playerUnit.width = 40;
-					        playerUnit.height = 40;
-					        playerUnit.anchor.setTo(0, 0);
-
-					        playerUnit.Name = "playerUnit" + unitCount;
-					        playerUnit.HP = 100000;
-					        game.physics.arcade.enable(playerUnit);
-					        playerUnit.enableBody = true;
-					        unitCount += 1;
-                    	}
-                	}
-	    		}, this);
+            selectedStructure.tint = 0x00FFFF;
+            selectedStructure.HP = 10000;
+            game.time.events.add(10000, function() {
+                selectedStructure.tint = 0xFFFFFF;
+            }, this);
+          
 		        // need to compensate for any camera displacement
 		        sprite.position.x += sprite.game.camera.x;
 		        sprite.position.y += sprite.game.camera.y;
 
 
 		        game.resources.lumber -= 5;
-
 		        // replace resource tile
 		        replacementSprite = game.add.sprite(originX, originY, sprite.key);
 	            replacementSprite.anchor.setTo(0, 0);
+
+                    replacementSprite.type = 'structure';
+                    replacementSprite.num = selectedStructure.num;
+                    uiGroup.remove(selectedStructure);
+		    playerStructureGroup.add(selectedStructure);
 	            replacementSprite.HP = Structures.HIT_POINTS;
 	            uiGroup.add(replacementSprite);
 	            this.enableStructureCreation(
@@ -220,8 +196,9 @@ var Structures = {
 	},
 
 	// This should be called from the update function of the main game file.
-	//update: function(addingStructureGroup, playerStructureGroup, enemyStructureGroup, mapGroup, game){
+
 	update: function(game, addingStructureGroup, otherGroups){
+
 	    // test collision with object
 	    /*
 	    var overlappingStructure;
@@ -252,8 +229,18 @@ var Structures = {
 	    		! game.physics.arcade.overlap(addingStructure, otherGroups[3], overlapCallback) &&
 	    		! game.physics.arcade.overlap(addingStructure, otherGroups[4], overlapCallback))
 		        addingStructure.tint = 0xFFFFFF; // removes any tint
-		};
-
+        if (addingStructure.type == 'structure')
+            {
+                        var nearbyUnit = false;
+                        playerUnits.forEach(function (s) {
+                            var dist = Phaser.Math.distance(s.x, s.y, game.camera.x+addingStructure.x, game.camera.y+addingStructure.y); 
+                            if (dist < this.DISTANCE_LIMIT)
+                                nearbyUnit = true;
+                        }, this);
+                if (!nearbyUnit)
+	            addingStructure.tint = 0xFF0000;
+            }
+		    }
 
 	    function overlapCallback(draggedStructure, mapStructure){
 		    draggedStructure.tint = 0xFF0000; // red tint
