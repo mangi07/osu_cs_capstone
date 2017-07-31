@@ -127,6 +127,7 @@ window.onload = function () {
         if (!gameOver) {
             updateCameraView();
             updateUIText();
+
             selectedUnit = selectedUnit.filter(function(unit) {
                 return unit.alive;
             });
@@ -186,6 +187,7 @@ window.onload = function () {
                 }
             }
 
+            // check overlap between all player units and resources
             for (var j = 0; j < mapGroup.children.length; j++) {
                 if (game.physics.arcade.overlap(playerUnits, mapGroup.children[j], collectResource, null, this) == false) {
                     mapGroup.children[j].alpha = 1;
@@ -193,42 +195,46 @@ window.onload = function () {
                 game.physics.arcade.overlap(computerUnits, mapGroup.children[j], collectResource, null, this);
             }
 
+            // check overlap between all player units and their destinations, each other, and structures
+            // Note: Group versus Group overlap checks could make such overlap checking more concise
             for (i = 0; i < playerUnits.children.length; i++) {
                 game.physics.arcade.overlap(playerUnits.children[i], game['destPoint' + playerUnits.children[i].name], stopUnit, null, this);
-                for (var j = 0; j < playerUnits.children.length; j++) {
+                for (var j = 0; j < playerUnits.children.length; j++) { // suggest var j = i if it helps performance
                     game.physics.arcade.overlap(playerUnits.children[i], playerUnits.children[j], stopUnit, null, this);
                 }
+                // TODO: units get stuck on overlap
                 game.physics.arcade.overlap(playerUnits.children[i], playerStructureGroup, healUnit, null, this);
-                game.physics.arcade.overlap(playerUnits.children[i], enemyStructureGroup, unitCombat, null, this);
+                game.physics.arcade.overlap(playerUnits.children[i], enemyStructureGroup, structureDamage, null, this);
 
 
             }
 
+            // check overlap between all computer units and their destinations, each other, and structures
             for (i = 0; i < computerUnits.children.length; i++) {
                 game.physics.arcade.overlap(computerUnits.children[i], game['destPoint' + computerUnits.children[i].name], stopUnit, null, this);
-                for (var j = 0; j < computerUnits.children.length; j++) {
+                for (var j = 0; j < computerUnits.children.length; j++) { // suggest var j = i if it helps performance
                     game.physics.arcade.overlap(computerUnits.children[i], computerUnits.children[j], stopUnit, null, this);
                 }
                 game.physics.arcade.overlap(computerUnits.children[i], enemyStructureGroup, healUnit, null, this);
-                game.physics.arcade.overlap(computerUnits.children[i], playerStructureGroup, unitCombat, null, this);
+                game.physics.arcade.overlap(computerUnits.children[i], playerStructureGroup, structureDamage, null, this);
             }
 
-
-
-
+            // check overlap of each player unit with a computer unit
             for (var i = 0; i < playerUnits.children.length; i++) {
                 for (var j = 0; j < computerUnits.children.length; j++) {
                     game.physics.arcade.overlap(playerUnits.children[i], computerUnits.children[j], unitCombat, null, this);
                 }
             }
+
             // when placing a resource and dragging over a sprite it should not overlap, tint the dragged resource red
-            Structures.update(uiGroup, playerStructureGroup, enemyStructureGroup, mapGroup, playerUnits, game);
-                  if (spawnFlag) {
-            spawnFlag = false;
-        }
+            Structures.update(game, uiGroup, [playerStructureGroup, enemyStructureGroup, mapGroup, playerUnits, computerUnits]);
+
+            if (spawnFlag) {
+                spawnFlag = false;
+            }
 
         }
-        else {
+        else { // game over stuff
             playerUnits.forEach(function (unit) {
                 unit.body.velocity.x = 0;
                 unit.body.velocity.y = 0;
@@ -238,6 +244,7 @@ window.onload = function () {
                 unit.body.velocity.y = 0;
             });
             Structures.disableStructureCreation(uiGroup);
+            game.time.events.removeAll();
         }
         checkGameOver();
     }
@@ -332,10 +339,6 @@ window.onload = function () {
             game['destPoint' + unit.name].height = 10;
             game['destPoint' + unit.name].enableBody = true;
             game.physics.arcade.enable(game['destPoint' + unit.name]);
-//            console.log("UNIT: ");
-//            console.log(unit);
-//            console.log("game[blah blah]: ");
-//            console.log(game['destPoint' + unit.name]);
             game.physics.arcade.moveToObject(unit, game['destPoint' + unit.name], VELOCITY);
         }
     }
@@ -421,6 +424,9 @@ window.onload = function () {
         if (enemy.HP < 0)
             enemy.destroy();
     }
+    function structureDamage(player, structure){
+        Structures.damage(game, structure)
+    }
 
     function initResourceCount() {
         game.resources = { lumber: STARTINGLUMBER, food: STARTINGFOOD };
@@ -473,6 +479,8 @@ window.onload = function () {
         game.load.image('lumberjack', 'assets/units/lumberjack.png');
         game.load.image('bear', 'assets/units/bear.png');
         game.load.image('woodsman', 'assets/units/woodsman.png');
+        game.load.spritesheet('explosion', 'assets/structures/exp2.png', 64, 64, 16);
+        //game.load.image('explosion', 'assets/structures/exp2.png');
     }
 
     function loadSounds() {
@@ -589,6 +597,7 @@ window.onload = function () {
               mapGroup,
               resources,
               playerUnits,
+              computerUnits,
               playerUnitCount,
               game
             );
@@ -1049,7 +1058,7 @@ window.onload = function () {
 //   .then(data => {
 //       return data;
 //   });
-    
 
+    
 
 };

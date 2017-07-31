@@ -16,6 +16,8 @@ var Structures = {
 
         TILE_LENGTH: 64,
         DISTANCE_LIMIT: 96,
+	HIT_POINTS: 5000,
+	HIT_DEDUCTION: 5,
 	/**
 	* may be used after tile map is loaded
 	* requires gameUtilities.js
@@ -55,7 +57,7 @@ var Structures = {
 			var y = coords[1];
 			var structure = group.create(x, y, key);
 			structure.Name = "Structure" + i;
-			structure.HP = 1000000;
+			//structure.HP = 1000000;
 			structure.anchor.setTo(0, 0);
 			group.add(structure);
 			structure.inputEnabled = true;
@@ -107,8 +109,10 @@ var Structures = {
 		mapGroup, // trees and berry bushes
 		resourcePoints,
 		playerUnits,
+		computerUnits,
 		unitCount,
-		game){
+		game)
+	{
 
 	    selectedStructure.inputEnabled = true;
 	    selectedStructure.input.enableDrag();
@@ -126,8 +130,6 @@ var Structures = {
 		}
 
 		function onDragStop(sprite, pointer) {
-
-//		    console.log(sprite.key + " dropped at x:" + pointer.x + " y: " + pointer.y);
                         var nearbyUnit = false;
                         playerUnits.forEach(function (s) {
                             var dist = Phaser.Math.distance(s.x, s.y, game.camera.x+sprite.x, game.camera.y+sprite.y); 
@@ -137,11 +139,12 @@ var Structures = {
 		    if (!game.physics.arcade.overlap(selectedStructure, playerStructureGroup) &&
 		    	!game.physics.arcade.overlap(selectedStructure, enemyStructureGroup) &&
 		    	!game.physics.arcade.overlap(selectedStructure, mapGroup) &&
-                        nearbyUnit)
+		    	!game.physics.arcade.overlap(selectedStructure, playerUnits) &&
+		    	!game.physics.arcade.overlap(selectedStructure, computerUnits) &&
+           nearbyUnit) 
 		    // the structure will stay on the map, 
 		    // resource points get deducted, and replacement sprite will pop up in the ui at the bottom.
 		    {
-//		        console.log('input disabled on', sprite.key);
 		        sprite.input.disableDrag();
 		        sprite.sendToBack();  // We want this for the game map, I think - if it's not sending behind everything and then not visible
 
@@ -150,6 +153,7 @@ var Structures = {
             game.time.events.add(10000, function() {
                 selectedStructure.tint = 0xFFFFFF;
             }, this);
+          
 		        // need to compensate for any camera displacement
 		        sprite.position.x += sprite.game.camera.x;
 		        sprite.position.y += sprite.game.camera.y;
@@ -159,11 +163,13 @@ var Structures = {
 		        // replace resource tile
 		        replacementSprite = game.add.sprite(originX, originY, sprite.key);
 	            replacementSprite.anchor.setTo(0, 0);
+
                     replacementSprite.type = 'structure';
                     replacementSprite.num = selectedStructure.num;
                     uiGroup.remove(selectedStructure);
 		    playerStructureGroup.add(selectedStructure);
-                    uiGroup.add(replacementSprite);
+	            replacementSprite.HP = Structures.HIT_POINTS;
+	            uiGroup.add(replacementSprite);
 	            this.enableStructureCreation(
 					uiGroup,
 					replacementSprite, 
@@ -172,20 +178,17 @@ var Structures = {
 					mapGroup, // trees and berry bushes
 					resourcePoints,
                     playerUnits,
+                    computerUnits,
                     unitCount,
 					game
 				);
-
 		    }
 		    else
 		        // end up back in the ui at the bottom (not get placed on map)
 		    {
-//		        console.log("NOT PLACING NEW STRUCTURE");
-
 		        sprite.position.x = originX;
 		        sprite.position.y = originY;
 		        //sprite.body.enable = false;
-
 		    }
 
 		}
@@ -193,18 +196,40 @@ var Structures = {
 	},
 
 	// This should be called from the update function of the main game file.
-	update: function(addingStructureGroup, playerStructureGroup, enemyStructureGroup, mapGroup, playerUnits, game){
+
+	update: function(game, addingStructureGroup, otherGroups){
+
 	    // test collision with object
-	    var addingStructure;
+	    /*
+	    var overlappingStructure;
 //			console.log(game);
+		var overlapping = false;
+
+		for (var i = 0; i < otherGroups.length; i++){
+			for (var j = 0; j < addingStructureGroup.length; j++){
+				game.physics.arcade.overlap( addingStructureGroup.children[j], otherGroups[i], overlapCallback );
+			}
+			if ( (! overlapping) ) {
+				overlappingStructure.tint = 0xFFFFFF; // removes any tint
+			}
+		}
+
+		function overlapCallback(draggedStructure, mapStructure){
+		    draggedStructure.tint = 0xFF0000; // red tint
+		    overlappingStructure = draggedStructure;
+		    overlapping = true;
+		}
+		*/
+		
 	    for (var i = 0; i < addingStructureGroup.length; i++){
 	    	addingStructure = addingStructureGroup.children[i];
-                
-	    	if ( ! game.physics.arcade.overlap(addingStructure, playerStructureGroup, overlapCallback) &&
-	    		! game.physics.arcade.overlap(addingStructure, enemyStructureGroup, overlapCallback) &&
-	    		! game.physics.arcade.overlap(addingStructure, mapGroup, overlapCallback)) 
-		        addingStructure.tint = 0xFFFFFF;
-            if (addingStructure.type == 'structure')
+	    	if ( ! game.physics.arcade.overlap(addingStructure, otherGroups[0], overlapCallback) &&
+	    		! game.physics.arcade.overlap(addingStructure, otherGroups[1], overlapCallback) &&
+	    		! game.physics.arcade.overlap(addingStructure, otherGroups[2], overlapCallback) &&
+	    		! game.physics.arcade.overlap(addingStructure, otherGroups[3], overlapCallback) &&
+	    		! game.physics.arcade.overlap(addingStructure, otherGroups[4], overlapCallback))
+		        addingStructure.tint = 0xFFFFFF; // removes any tint
+        if (addingStructure.type == 'structure')
             {
                         var nearbyUnit = false;
                         playerUnits.forEach(function (s) {
@@ -219,14 +244,51 @@ var Structures = {
 
 	    function overlapCallback(draggedStructure, mapStructure){
 		    draggedStructure.tint = 0xFF0000; // red tint
-		    // 0xFFFFFF removes any tint
 		}
+		
 	},
 
 	// can be called from game.js to stop drag-and-drop feature when game ends
 	disableStructureCreation: function(uiGroup){
 		for(var i = 0; i < uiGroup.children.length; i++) {
-		    uiGroup.children[i].input.enabled = false;
+			if ( uiGroup.children[i].input )
+		    	uiGroup.children[i].input.enabled = false;
 		}
+	},
+
+	/* Called in update to damage the structure.
+		When structure.HP reaches 0, the structure will be destroyed. */
+	damage: function(game, structure){
+		
+		if (!structure.HP) {
+			structure.HP = this.HIT_POINTS;
+		}
+
+		if (structure.HP && structure.HP > 0){
+			structure.HP -= 5;
+		}
+
+		if ( (structure.HP < this.HIT_POINTS / 2) && (structure.halfDamaged == undefined) ) {
+			// swap out original structure image for half destroyed equivalent
+			structure.loadTexture('structure', 0, false);
+			structure.halfDamaged = true;
+
+			// show explosion?
+			//game.load.spritesheet('explosion', 'assets/structures/exp2.png', 64, 64, 16);
+			structure.explosion = game.add.sprite(structure.position.x, structure.position.y, 'explosion');
+			structure.explosion.animations.add('explode', [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
+			structure.explosion.animations.play('explode', 10, true);
+
+		}
+
+		if (structure.HP <= 0){
+			if (structure.explosion) {
+				structure.explosion.animations.stop(null, true);
+			}
+			structure.explosion.destroy();
+			// remove structure from game
+			structure.destroy();
+		}
+
 	}
 }
