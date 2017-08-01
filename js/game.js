@@ -650,6 +650,7 @@ window.onload = function () {
               mapGroup,
               resources,
               playerUnits,
+              computerUnits,
               playerUnitCount,
               game
             );
@@ -668,6 +669,7 @@ window.onload = function () {
               mapGroup,
               resources,
               playerUnits,
+              computerUnits,
               playerUnitCount,
               game
             );
@@ -775,6 +777,7 @@ window.onload = function () {
               mapGroup,
               resources,
               playerUnits,
+              computerUnits,
               playerUnitCount,
               game
             );
@@ -793,6 +796,7 @@ window.onload = function () {
               mapGroup,
               resources,
               playerUnits,
+              computerUnits,
               playerUnitCount,
               game
             );

@@ -232,7 +232,7 @@ var Structures = {
         if (addingStructure.type == 'structure')
             {
                         var nearbyUnit = false;
-                        playerUnits.forEach(function (s) {
+                        otherGroups[3].forEach(function (s) {
                             var dist = Phaser.Math.distance(s.x, s.y, game.camera.x+addingStructure.x, game.camera.y+addingStructure.y); 
                             if (dist < this.DISTANCE_LIMIT)
                                 nearbyUnit = true;
