@@ -36,6 +36,7 @@ window.onload = function () {
     var enemyUnitCount = 0;
     var enemyLumber;
     var enemyFood;
+    var enemyResources = { enemyLumber: STARTINGLUMBER, enemyFood: STARTINGFOOD };
     var spawnX;
     var spawnY;
     var spawnFlag;
@@ -669,6 +670,7 @@ window.onload = function () {
 
     }
 
+    /* Move the first two AI units to the closest tree and berry bush, respectively */
     function collectResourcesAI() {
       if (computerUnits.countLiving() > 1) {
         var closestResource;
@@ -684,6 +686,7 @@ window.onload = function () {
       }
     }
 
+    /* Spawn a beaver near the most recently built AI structure, every 10 seconds, taking 10 points from lumber and food each. */
     function spawnUnitAI() {
         var compStruct1 = enemyStructureGroup.getTop();
         if (enemyLumber > 10 && enemyFood > 10) {
@@ -694,6 +697,7 @@ window.onload = function () {
         game.time.events.add(10000, spawnUnitAI, this);
     }
 
+    /* If there are more than 2 AI units, put the 3rd through 11th units on defense */
     function defendAI() {
         var compStruct1 = enemyStructureGroup.getTop();
         if (computerUnits.countLiving() < 3) {

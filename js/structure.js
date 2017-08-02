@@ -69,8 +69,6 @@ var Structures = {
 
 	},
 
-	// TODO: make grass tiles double-clickable for (pop-up?) choice of structure
-	// TODO: replace grass tile with chosen structure
 	/*
 	borrowed from: http://www.andy-howard.com/how-to-double-click-in-phaser/index.html on 7/12/17
 
@@ -299,9 +297,89 @@ var Structures = {
 				structure.explosion.animations.stop(null, true);
 			}
 			structure.explosion.destroy();
+
 			// remove structure from game
 			structure.destroy();
 		}
 
+	},
+
+	addEnemyStructure: function(game, enemyStructureGroup, enemyResources, coordsGenerator){
+		
+
+
+
+
+		// 100 attempts to find random coordinates in right half of the game map
+		// 100 attempts to find random coordinates in left half of the game map
+		// if structure still cannot be placed without overlapping a game object,
+		//   destroy whatever is in its way.
+		// finally, deduct 10 point of enemy lumber and food
+		// this function assumes that the enemy has at least 10 points of enemy lumber and 
+		// 10 points of enemy food
+
+
+/*		
+		var attempts = 0;
+		var structureNotPlaced = true;
+		//var x = (Math.random() * game.world.width / 2) + (game.world.width / 2);  // right half
+		//var y = Math.random() * game.world.height - 40;
+		//var x = Math.random() * game.world.width;
+		//var y = Math.random() * game.world.height;
+		var newStructure = game.add.sprite(x, y, "dam");
+		//newStructure.enableBody = true;
+		game.physics.arcade.enable(newStructure);
+
+		while (structureNotPlaced && attempts < 100){
+			if (game.physics.arcade.overlap(newStructure, game.world)){
+				// continue to find new coordinates
+				newStructure.position.x = (Math.random() * game.world.width / 2) + (game.world.width / 2);  // right half
+				newStructure.position.y = Math.random() * game.world.height - 40;
+			} else {
+				structureNotPlaced = false;
+				newStructure.tint = 0xFFFF00;
+			}
+			attempts++;
+		}
+
+
+		if (attempts >= 100 && structureNotPlaced){
+			// try placing structure in left side of map
+			attempts = 0;
+			while (structureNotPlaced && attempts < 1000){
+				if (game.physics.arcade.overlap(newStructure, game.world)){
+					// continue to find new coordinates
+					newStructure.position.x = Math.random() * game.world.width / 2;  // left half
+					newStructure.position.y = Math.random() * game.world.height - 40;
+				} else {
+					structureNotPlaced = false;
+				}
+				attempts++;
+			}
+		}
+
+
+		attempts = 0;
+		// structure still not placed? ...destroy whatever is in its way!
+		while (structureNotPlaced && 
+			game.physics.arcade.overlap(newStructure, game.world, destroyObj, null, this) &&
+			attempts < 1000){
+				attempts++;
+		}		
+
+		//game.physics.arcade.overlap(newStructure, game.world, destroyObj, null, this);
+		function destroyObj(newStruct, obj){
+			//obj.tint = 0x0000FF; // can never see these blue objects, so I think that's good
+			if ( obj.key != "dam" )
+				obj.destroy();
+			//newStruct.tint = 0xFF0000; //TODO: why are they all red on the right side ????
+			newStruct.tint = 0x0000FF;
+			structureNotPlaced = false;
+
+		}
+*/
+		// deduct points
+		enemyResources.enemyLumber -= 10;
+		enemyResources.enemyFood -= 10;
 	}
 }

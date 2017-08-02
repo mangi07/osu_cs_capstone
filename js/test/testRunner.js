@@ -1,11 +1,13 @@
 // testRunner.js
 window.onload = function () {
 
-	var CAMERA_WIDTH = 1280;
-	var CAMERA_HEIGHT = 768;
+	var WORLD_WIDTH = 1280;
+	var WORLD_HEIGHT = 768;
 
-	var game = new Phaser.Game(CAMERA_WIDTH, CAMERA_HEIGHT, Phaser.AUTO, '',
+	var game = new Phaser.Game(WORLD_WIDTH, WORLD_HEIGHT, Phaser.AUTO, '',
 	      { preload: preload, create: create, update: update, render: render });
+
+	
 
 	function preload() {
 		game.load.image('structure', '../../assets/tiles/grass.png');
@@ -23,10 +25,16 @@ window.onload = function () {
 	}
 
 	function create() {
-		testDestroySprite(game);
+		game.physics.startSystem(Phaser.Physics.ARCADE);
+    	game.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+
+		//testDestroySprite(game);
+		//testAddEnemyStructure(game, WORLD_WIDTH, WORLD_HEIGHT, 100);
 	}
-	function update() {}
-	function render() {}
+	function update() {
+	}
+	function render() {
+	}
 
 }
 
