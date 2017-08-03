@@ -63,6 +63,7 @@ var Structures = {
 			structure.inputEnabled = true;
       		game.physics.arcade.enable(structure);
 			structure.HP = 10000;
+			structure.combat = false;
 
 		}
 
@@ -150,6 +151,7 @@ var Structures = {
 
             selectedStructure.tint = 0x00FFFF;
             selectedStructure.HP = 10000;
+            selectedStructure.combat = false;
             game.time.events.add(10000, function() {
                 selectedStructure.tint = 0xFFFFFF;
             }, this);
@@ -280,6 +282,20 @@ var Structures = {
 			structure.explosion.animations.play('explode', 10, true);
 
 		}
+                if (structure.halfDamaged == undefined) {
+                    if (!structure.combat) {
+                    var slash = game.add.sprite(structure.x, structure.y, 'structure-attack');
+                    slash.width = this.TILE_LENGTH;
+                    slash.height = this.TILE_LENGTH;
+                    structure.combat = true;
+                    game.time.events.add(500, function() {
+                        slash.destroy();
+                        game.time.events.add(500, function() {
+                            structure.combat = false;
+                        });
+                    });
+                    }
+                }
 
 		if (structure.HP <= 0){
 			if (structure.explosion) {

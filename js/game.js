@@ -143,10 +143,26 @@ window.onload = function () {
                 }
             }
             playerUnits.forEach(function(unit) {
+                if (unit.key == 'lumberjack' && unit.body.velocity.x < 0)
+                    unit.loadTexture('lumberjack-left');
+                else if (unit.key == 'lumberjack-left' && unit.body.velocity.x > 0)
+                    unit.loadTexture('lumberjack');
+                if (unit.key == 'woodsman' && unit.body.velocity.x < 0)
+                    unit.loadTexture('woodsman-left');
+                else if (unit.key == 'woodsman-left' && unit.body.velocity.x > 0)
+                    unit.loadTexture('woodsman');
                 if (unit.gather)
                     collectResourceAI(unit, playerStructureGroup);
             });
             computerUnits.forEach(function(unit) {
+                if (unit.key == 'beaver' && unit.body.velocity.x < 0)
+                    unit.loadTexture('beaver-left');
+                else if (unit.key == 'beaver-left' && unit.body.velocity.x > 0)
+                    unit.loadTexture('beaver');
+                if (unit.key == 'bear' && unit.body.velocity.x < 0)
+                    unit.loadTexture('bear-left');
+                else if (unit.key == 'bear-left' && unit.body.velocity.x > 0)
+                    unit.loadTexture('bear');
                 if (unit.gather)
                     collectResourceAI(unit, enemyStructureGroup);
             });
@@ -404,7 +420,48 @@ window.onload = function () {
         unit.food = 0;
         //console.log(unit.HP);
     }
+
     function unitCombat(player, enemy) {
+        if (enemy.key == 'beaver' && enemy.x > player.x)
+            enemy.loadTexture('beaver-left');
+        else if (enemy.key == 'beaver-left' && enemy.x < player.x)
+            enemy.loadTexture('beaver');
+        if (enemy.key == 'bear' && enemy.x > player.x)
+            enemy.loadTexture('bear-left');
+        else if (enemy.key == 'bear-left' && enemy.x < player.x)
+            enemy.loadTexture('bear');
+        var slash;
+        var slash2;
+        if (!player.combat) {
+            if (player.key == 'lumberjack' || player.key == 'woodsman')
+                slash = game.add.sprite(player.x, player.y, 'attack');
+            else
+                slash = game.add.sprite(player.x, player.y, 'attack-left');
+            slash.width = 40;
+            slash.height = 40;
+            player.combat = true;
+            game.time.events.add(300, function() {
+                slash.destroy();
+                game.time.events.add(300, function() {
+                    player.combat = false;
+                });
+            });
+        }
+        if (!enemy.combat) {
+            if (enemy.key == 'beaver' || enemy.key == 'bear')
+                slash2 = game.add.sprite(enemy.x, enemy.y, 'enemy-attack');
+            else
+                slash2 = game.add.sprite(enemy.x, enemy.y, 'enemy-attack-left');
+            slash2.width = 40;
+            slash2.height = 40;
+            enemy.combat = true;
+            game.time.events.add(500, function() {
+                slash2.destroy();
+                game.time.events.add(500, function() {
+                    enemy.combat = false;
+                });
+            });
+        }
         if (playerUnits.getIndex(player) > -1) {
             stopUnit(player, game['destPoint' + player.name]);
         }
@@ -476,11 +533,21 @@ window.onload = function () {
         game.load.image('sawmill', 'assets/structures/sawmill.png');
         game.load.image('dam', 'assets/structures/dam.png');
         game.load.image('beaver', 'assets/units/beaver.png');
+        game.load.image('beaver-left', 'assets/units/beaver-left.png');
         game.load.image('lumberjack', 'assets/units/lumberjack.png');
+        game.load.image('lumberjack-left', 'assets/units/lumberjack-left.png');
         game.load.image('bear', 'assets/units/bear.png');
+        game.load.image('bear-left', 'assets/units/bear-left.png');
         game.load.image('woodsman', 'assets/units/woodsman.png');
+        game.load.image('woodsman-left', 'assets/units/woodsman-left.png');
         game.load.spritesheet('explosion', 'assets/structures/exp2.png', 64, 64, 16);
         //game.load.image('explosion', 'assets/structures/exp2.png');
+        game.load.image('gather', 'assets/actions/circular.png');
+        game.load.image('attack', 'assets/actions/slash-blue.png');
+        game.load.image('attack-left', 'assets/actions/slash-blue-left.png');
+        game.load.image('enemy-attack', 'assets/actions/slash-red.png');
+        game.load.image('enemy-attack-left', 'assets/actions/slash-red-left.png');
+        game.load.image('structure-attack', 'assets/actions/structure-slash.png');
     }
 
     function loadSounds() {
@@ -876,6 +943,7 @@ window.onload = function () {
         playerUnit.lumber = 0;
         playerUnit.gather = false;
         playerUnit.resourceType = 'tree';
+        playerUnit.combat = false;
 
         game.physics.arcade.enable(playerUnit);
         playerUnit.enableBody = true;
@@ -888,7 +956,7 @@ window.onload = function () {
         //console.log(units);
         var unitData = units[type];
         //console.log(unitData);
-        var enemyUnit = computerUnits.create(x, y, type);
+        var enemyUnit = game.add.sprite(x, y, type);
         enemyUnit.name = "enemyUnit" + playerUnitCount;
         enemyUnit.Type = type;
         enemyUnit.width = 40; //possibly make variable based on unit file later
@@ -902,9 +970,11 @@ window.onload = function () {
         enemyUnit.lumber = 0;
         enemyUnit.gather = false;
         enemyUnit.resourceType = 'tree';
+        enemyUnit.combat = false;
         game.physics.arcade.enable(enemyUnit);
         enemyUnit.enableBody = true;
         enemyUnitCount += 1;
+        computerUnits.add(enemyUnit);
         //console.log("spawned unit");
 
     }
@@ -942,7 +1012,10 @@ window.onload = function () {
     function spawnUnitAI() {
         var compStruct1 = enemyStructureGroup.getTop();
         if (enemyLumber >= 10 && enemyFood >= 10) {
-            spawnEnemyUnit(compStruct1.position.x - TILE_LENGTH, compStruct1.position.y - TILE_LENGTH, "beaver");
+            if (Math.floor(2 * Math.random()) == 1)
+                spawnEnemyUnit(compStruct1.position.x - TILE_LENGTH, compStruct1.position.y - TILE_LENGTH, 'beaver');
+            else
+                spawnEnemyUnit(compStruct1.position.x - TILE_LENGTH, compStruct1.position.y - TILE_LENGTH, 'bear');
             enemyLumber -= 10;
             enemyFood -= 10;
         }
