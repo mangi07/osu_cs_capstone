@@ -153,6 +153,10 @@ window.onload = function () {
                     unit.loadTexture('woodsman');
                 if (unit.gather)
                     collectResourceAI(unit, playerStructureGroup);
+                if (unit.heal) {
+                    unit.healSprite.x = unit.x;
+                    unit.healSprite.y = unit.y;
+                }
             });
             computerUnits.forEach(function(unit) {
                 if (unit.key == 'beaver' && unit.body.velocity.x < 0)
@@ -165,6 +169,10 @@ window.onload = function () {
                     unit.loadTexture('bear');
                 if (unit.gather)
                     collectResourceAI(unit, enemyStructureGroup);
+                if (unit.heal) {
+                    unit.healSprite.x = unit.x;
+                    unit.healSprite.y = unit.y;
+                }
             });
             if (game.input.mousePointer.leftButton.ctrlKey) {
                 game.input.mousePointer.leftButton.ctrlKey = false;
@@ -402,9 +410,55 @@ window.onload = function () {
         }
     }
 
-    function healUnit(unit) {
-        //unit.body.velocity.x = 0;
-        //unit.body.velocity.y = 0;
+    function healUnit(unit, structure) {
+            if (unit.lumber > 0) {
+                if (unit.gatherLumberSprite != null) {
+                    unit.gatherLumberSprite.destroy();
+                    unit.gatherLumberSprite = null;
+                }
+                unit.gatherLumberSprite = game.add.text(structure.x-16, structure.y-32, 'L+10');
+                unit.gatherLumberSprite.fill = 'blue';
+                unit.gatherLumberSprite.width = 40;
+                unit.gatherLumberSprite.height = 40;
+                unit.gatherLumberSprite.alpha = 0.6;
+                game.time.events.add(400, function() {    
+                    unit.gatherLumberSprite.destroy();
+                    unit.gatherLumberSprite = null;
+                });
+            }
+            if (unit.food > 0) {
+                if (unit.gatherFoodSprite != null) {
+                    unit.gatherFoodSprite.destroy();
+                    unit.gatherFoodSprite = null;
+                }
+                unit.gatherFoodSprite = game.add.text(structure.x+32, structure.y-32, 'F+10');
+		unit.gatherFoodSprite.fill = 'red';
+                unit.gatherFoodSprite.width = 40;
+                unit.gatherFoodSprite.height = 40;
+                unit.gatherFoodSprite.alpha = 0.6;
+                game.time.events.add(400, function() {    
+                    unit.gatherFoodSprite.destroy();
+                    unit.gatherFoodSprite = null;
+                });
+            }
+            if (!unit.heal) {
+                unit.healSprite = game.add.sprite(unit.x, unit.y, 'heal');
+                unit.healSprite.width = 40;
+                unit.healSprite.height = 40;
+                unit.healSprite.alpha = 0.6;
+                unit.heal = true;
+                game.time.events.add(500, function() {    
+                    unit.healSprite.destroy();
+                    game.time.events.add(500, function() {
+                        unit.heal = false;
+                    });
+                });
+            }
+            else {
+                if (unit.healSprite.alpha > 0.05) {
+                    unit.healSprite.alpha -= 0.05;
+                }
+            }
         if (unit.HP < unit.Max_HP) {
             unit.HP += Math.min(1, unit.Max_HP - unit.HP);
         }
@@ -430,37 +484,45 @@ window.onload = function () {
             enemy.loadTexture('bear-left');
         else if (enemy.key == 'bear-left' && enemy.x < player.x)
             enemy.loadTexture('bear');
-        var slash;
-        var slash2;
         if (!player.combat) {
             if (player.key == 'lumberjack' || player.key == 'woodsman')
-                slash = game.add.sprite(player.x, player.y, 'attack');
+                player.slash = game.add.sprite(player.x, player.y, 'attack');
             else
-                slash = game.add.sprite(player.x, player.y, 'attack-left');
-            slash.width = 40;
-            slash.height = 40;
+                player.slash = game.add.sprite(player.x, player.y, 'attack-left');
+            player.slash.width = 40;
+            player.slash.height = 40;
             player.combat = true;
-            game.time.events.add(300, function() {
-                slash.destroy();
-                game.time.events.add(300, function() {
+            game.time.events.add(500, function() {
+                player.slash.destroy();
+                game.time.events.add(500, function() {
                     player.combat = false;
                 });
             });
         }
+        else {
+            if (player.slash.alpha > 0.02) {
+                player.slash.alpha -= 0.02;
+            }
+        }
         if (!enemy.combat) {
             if (enemy.key == 'beaver' || enemy.key == 'bear')
-                slash2 = game.add.sprite(enemy.x, enemy.y, 'enemy-attack');
+                enemy.slash = game.add.sprite(enemy.x, enemy.y, 'enemy-attack');
             else
-                slash2 = game.add.sprite(enemy.x, enemy.y, 'enemy-attack-left');
-            slash2.width = 40;
-            slash2.height = 40;
+                enemy.slash = game.add.sprite(enemy.x, enemy.y, 'enemy-attack-left');
+            enemy.slash.width = 40;
+            enemy.slash.height = 40;
             enemy.combat = true;
             game.time.events.add(500, function() {
-                slash2.destroy();
+                enemy.slash.destroy();
                 game.time.events.add(500, function() {
                     enemy.combat = false;
                 });
             });
+        }
+        else {
+            if (enemy.slash.alpha > 0.02) {
+                enemy.slash.alpha -= 0.02;
+            }
         }
         if (playerUnits.getIndex(player) > -1) {
             stopUnit(player, game['destPoint' + player.name]);
@@ -481,6 +543,7 @@ window.onload = function () {
         if (enemy.HP < 0)
             enemy.destroy();
     }
+
     function structureDamage(player, structure){
         Structures.damage(game, structure)
     }
@@ -542,12 +605,12 @@ window.onload = function () {
         game.load.image('woodsman-left', 'assets/units/woodsman-left.png');
         game.load.spritesheet('explosion', 'assets/structures/exp2.png', 64, 64, 16);
         //game.load.image('explosion', 'assets/structures/exp2.png');
-        game.load.image('gather', 'assets/actions/circular.png');
         game.load.image('attack', 'assets/actions/slash-blue.png');
         game.load.image('attack-left', 'assets/actions/slash-blue-left.png');
         game.load.image('enemy-attack', 'assets/actions/slash-red.png');
         game.load.image('enemy-attack-left', 'assets/actions/slash-red-left.png');
         game.load.image('structure-attack', 'assets/actions/structure-slash.png');
+        game.load.image('heal', 'assets/actions/heart.png');
     }
 
     function loadSounds() {
@@ -944,7 +1007,9 @@ window.onload = function () {
         playerUnit.gather = false;
         playerUnit.resourceType = 'tree';
         playerUnit.combat = false;
-
+        playerUnit.heal = false;
+        playerUnit.gatherLumberSprite = null;
+        playerUnit.gatherFoodSprite = null;
         game.physics.arcade.enable(playerUnit);
         playerUnit.enableBody = true;
         playerUnitCount += 1;
@@ -971,6 +1036,9 @@ window.onload = function () {
         enemyUnit.gather = false;
         enemyUnit.resourceType = 'tree';
         enemyUnit.combat = false;
+        enemyUnit.heal = false;
+        enemyUnit.gatherLumberSprite = null;
+        enemyUnit.gatherFoodSprite = null;
         game.physics.arcade.enable(enemyUnit);
         enemyUnit.enableBody = true;
         enemyUnitCount += 1;
