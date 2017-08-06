@@ -45,7 +45,6 @@ window.onload = function () {
     var compDefenseUnits = [];
     var compAttackUnits = [];
     var moveDown;
-    var startAttack;
     var uiResourceText;
     var selectWindow;
     var selectWindowFlag;
@@ -422,8 +421,10 @@ window.onload = function () {
                 unit.gatherLumberSprite.height = 40;
                 unit.gatherLumberSprite.alpha = 0.6;
                 game.time.events.add(400, function() {    
-                    unit.gatherLumberSprite.destroy();
-                    unit.gatherLumberSprite = null;
+                    if (unit.gatherLumberSprite != null) {
+                        unit.gatherLumberSprite.destroy();
+                        unit.gatherLumberSprite = null;
+                    }
                 });
             }
             if (unit.food > 0) {
@@ -437,8 +438,10 @@ window.onload = function () {
                 unit.gatherFoodSprite.height = 40;
                 unit.gatherFoodSprite.alpha = 0.6;
                 game.time.events.add(400, function() {    
-                    unit.gatherFoodSprite.destroy();
-                    unit.gatherFoodSprite = null;
+                    if (unit.gatherFoodSprite != null) {
+                        unit.gatherFoodSprite.destroy();
+                        unit.gatherFoodSprite = null;
+                    }
                 });
             }
             if (!unit.heal) {
@@ -1063,18 +1066,19 @@ window.onload = function () {
     }
 
     function collectResourcesAI() {
-      if (computerUnits.countLiving() > 1) {
-        var closestResource;
-        var compUnit1 = computerUnits.getChildAt(0);
-        var compUnit2 = computerUnits.getChildAt(1);
-        compUnit1.gather = true;
-        compUnit1.resourceType = 'tree';
-        compUnit2.gather = true;
-        compUnit2.resourceType = 'berry';
-        compCollectUnit1 = compUnit1;
-        compCollectUnit2 = compUnit2;
-      }
-      game.time.events.add(500, collectResourcesAI, this);
+        if (computerUnits.countLiving() > 1) {
+            var closestResource;
+            var compUnit1 = computerUnits.getChildAt(0);
+            var compUnit2 = computerUnits.getChildAt(1);
+            compUnit1.gather = true;
+            compUnit1.resourceType = 'tree';
+            compUnit2.gather = true;
+            compUnit2.resourceType = 'berry';
+            compCollectUnit1 = compUnit1;
+            compCollectUnit2 = compUnit2;
+        }
+        if (!gameOver)
+            game.time.events.add(500, collectResourcesAI, this);
     }
 
     function spawnUnitAI() {
@@ -1087,7 +1091,8 @@ window.onload = function () {
             enemyLumber -= 10;
             enemyFood -= 10;
         }
-        game.time.events.add(10000, spawnUnitAI, this);
+        if (!gameOver)
+            game.time.events.add(10000, spawnUnitAI, this);
     }
 
     function defendAI() {
@@ -1098,10 +1103,11 @@ window.onload = function () {
         if (computerUnits.countLiving() < 3) {
             compDefenseUnits = [];
         }
-        else if (compDefenseUnits.length < 12) {
+        else {
             computerUnits.forEachAlive(function(unit) {
                 if (unit != compCollectUnit1 && unit != compCollectUnit2 &&
-                    compDefenseUnits.indexOf(unit) == -1) {
+                    compDefenseUnits.indexOf(unit) == -1 &&
+                    compAttackUnits.indexOf(unit) == -1) {
                     compDefenseUnits.push(unit);
                 }
             });
@@ -1144,7 +1150,8 @@ window.onload = function () {
             moveDown = false;
         else
             moveDown = true;
-        game.time.events.add(1000, defendAI, this);
+        if (!gameOver)
+            game.time.events.add(1000, defendAI, this);
     }
 
     function attackAI() {
@@ -1153,36 +1160,22 @@ window.onload = function () {
             return unit.alive;
         });
         if (computerUnits.countLiving() > 17) {
-          if (startAttack) {
+          if (compDefenseUnits.length >= 16) {
             for (i = 0; i < 4; i++) {
                 compAttackUnit = compDefenseUnits.shift();
-                moveCompUnit(compAttackUnit, playerStructureGroup.getTop().body.position.x,
-                playerStructureGroup.getTop().body.position.y);
                 compAttackUnits.push(compAttackUnit);
-                
             }
-            computerUnits.forEachAlive(function(unit) {
-                if (unit != compCollectUnit1 && unit != compCollectUnit2
-                    && compDefenseUnits.indexOf(unit) == -1
-                    && compAttackUnits.indexOf(unit) == -1) {
-                    compDefenseUnits.unshift(unit);
-                }
-            });
-            startAttack = false;
           }
-          else {
-            for (var j = 0; j < compAttackUnits.length; j++) {
-                moveCompUnit(compAttackUnits[j], playerStructureGroup.getTop().body.position.x,
-                playerStructureGroup.getTop().body.position.y);
-            }
+          for (var j = 0; j < compAttackUnits.length; j++) {
+              moveCompUnit(compAttackUnits[j], playerStructureGroup.getTop().body.position.x,
+              playerStructureGroup.getTop().body.position.y);
           }
         }
         else {
             compAttackUnits = [];
-            startAttack = true;
         }
-        game.time.events.add(1000, attackAI, this);
-
+        if (!gameOver)
+            game.time.events.add(1000, attackAI, this);
     }
 
   function loadJSON(type, callback) {   
