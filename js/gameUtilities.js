@@ -78,6 +78,26 @@ var GameUtilities = {
 
 		}
 
+	},
+
+	/* Returns the group memeber nearest sprite */
+	findNearestInGroup: function(sprite, group) {
+		var dist = -1; // infinity
+		var tempDist = -1;
+		var nearestInGroup = null;
+
+		group.forEach(function(groupMember){
+			tempDist = Phaser.Math.distance(
+				groupMember.x, groupMember.y, sprite.x, sprite.y
+			); 
+            
+			if(tempDist < dist){
+				dist = tempDist;
+				nearestInGroup = groupMember;
+			}
+		});
+
+		return nearestInGroup;
 	}
 
 };

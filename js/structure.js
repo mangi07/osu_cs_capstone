@@ -271,8 +271,7 @@ var Structures = {
 			structure.loadTexture('structure', 0, false);
 			structure.halfDamaged = true;
 
-			// show explosion?
-			//game.load.spritesheet('explosion', 'assets/structures/exp2.png', 64, 64, 16);
+			// show explosion
 			structure.explosion = game.add.sprite(structure.position.x, structure.position.y, 'explosion');
 			structure.explosion.animations.add('explode', [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
 			structure.explosion.animations.play('explode', 10, true);
@@ -291,11 +290,54 @@ var Structures = {
 
 	},
 
-	addEnemyStructure: function(game, enemyStructureGroup, enemyResources, coordsGenerator){
+	/* currently not used */
+	chooseDamBuilder: function(computerUnits){
+		var damBuilder;
+        if ( computerUnits.countLiving() > 0 ){
+        	//computerUnits.forEachAlive(function(unit){
+        	//	if(unit.key = "beaver" && (!unit.role || unit.role != "damBuilder") )
+        	//		;
+        	//});
+            damBuilder = computerUnits.getTop();
+            return damBuilder;
+        } else {
+            return null;
+        }
+	},
+
+	/* This will find the closest tree that is not already designated for building a dam. */
+	moveBeaverToClosestTree: function(damBuilder, mapGroup, moveCompUnit){
+		var closestTree = mapGroup.getClosestTo(damBuilder, function(resource){
+			return resource.key == "tree" && !resource.markedForDam;
+		});
+		closestTree.markedForDam = true;
+		damBuilder.tree = closestTree;
+		closestTree.tint = 0x0000FF; // TODO: remove - just for debugging purposes
+		moveCompUnit(damBuilder, closestTree.body.position.x, closestTree.body.position.y);
+		//game.physics.arcade.moveToObject(damBuilder, closestTree, velocity);
+		damBuilder.tint = 0xFF0000; // TODO: remove tint - just for debugging purposes
+	},
+
+	addEnemyStructure: function(game, tree, enemyStructureGroup){
+		// swap out for half-depleted tree and set game event to continue from this point
+		tree.loadTexture('cut-tree', 0, false);
+		//tree.scale.setTo(60,60);
+
+		// get x,y for tree
+		var x = tree.body.position.x;
+		var y = tree.body.position.y;
+		
+		game.time.events.add(15000, function(){
+			// destroy tree and creat dam at this x,y
+			tree.destroy();
+			var dam = enemyStructureGroup.create(x, y, "dam");
+			game.physics.arcade.enable(dam);
+			dam.HP = this.HIT_POINTS;
+		}, this);
 		
 
-
-
+		// attach new ai functions to this dam (eg: spawning a few ai with separate roles)
+		// TODO: also work on structure depletion
 
 		// 100 attempts to find random coordinates in right half of the game map
 		// 100 attempts to find random coordinates in left half of the game map
@@ -366,7 +408,9 @@ var Structures = {
 		}
 */
 		// deduct points
-		enemyResources.enemyLumber -= 10;
-		enemyResources.enemyFood -= 10;
-	}
+		//enemyResources.enemyLumber -= 10;
+		//enemyResources.enemyFood -= 10;
+	},
+
+
 }

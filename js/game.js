@@ -50,6 +50,10 @@ window.onload = function () {
     var selectWindow;
     var selectWindowFlag;
     var selectionChange;
+    //var initialAIEvents = [];
+    var runInitialAI = true;
+    var damBuilders = [];
+    //var damTrees = [];
   
     var units = {};
     //change this to a loop over an array of unit types??
@@ -98,6 +102,11 @@ window.onload = function () {
 
         unitCount = 0;
         createUnits();
+
+        //initialAIEvents.push( game.time.events.add(500, collectResourcesAI, this) );
+        //initialAIEvents.push( game.time.events.add(/*10000*/20, spawnUnitAI, this) );
+        //initialAIEvents.push( game.time.events.add(1000, defendAI, this) );
+        //initialAIEvents.push( game.time.events.add(1000, attackAI, this) );
         collectResourcesAI();
         spawnUnitAI();
         defendAI();
@@ -202,7 +211,6 @@ window.onload = function () {
                 for (var j = 0; j < playerUnits.children.length; j++) { // suggest var j = i if it helps performance
                     game.physics.arcade.overlap(playerUnits.children[i], playerUnits.children[j], stopUnit, null, this);
                 }
-                // TODO: units get stuck on overlap
                 game.physics.arcade.overlap(playerUnits.children[i], playerStructureGroup, healUnit, null, this);
                 game.physics.arcade.overlap(playerUnits.children[i], enemyStructureGroup, structureDamage, null, this);
 
@@ -228,6 +236,9 @@ window.onload = function () {
 
             // when placing a resource and dragging over a sprite it should not overlap, tint the dragged resource red
             Structures.update(game, uiGroup, [playerStructureGroup, enemyStructureGroup, mapGroup, playerUnits, computerUnits]);
+            for (var i = 0; i < damBuilders.length; i++){
+                game.physics.arcade.overlap(damBuilders[i], mapGroup, buildDamAI, checkTree, this);
+            }
 
             if (spawnFlag) {
                 spawnFlag = false;
@@ -344,7 +355,11 @@ window.onload = function () {
     }
 
     function render() {
-
+        //game.debug(game.timer, 32, 32);
+        game.debug.text("Queued events: " + game.time.events.length, 32, 32);
+        game.debug.text("Total enemy units: " + computerUnits.length, 32, 70);
+        game.debug.text("Enemy lumber: " + enemyLumber, 32, 90);
+        game.debug.text("Enemy food: " + enemyFood, 32, 110);
         //game.debug.cameraInfo(game.camera, 32, 32);
         //game.debug.pointer(game.input.mousePointer);
     }
@@ -910,6 +925,8 @@ window.onload = function () {
     }
 
     function collectResourceAI(unit, structureGroup) {
+        if ( !runInitialAI ) return;
+
         var closestResource;
         var nearestHome = structureGroup.getBottom();
         if ((unit.resourceType == 'tree' && unit.lumber == 0) ||
@@ -936,7 +953,8 @@ window.onload = function () {
         compCollectUnit1 = compUnit1;
         compCollectUnit2 = compUnit2;
       }
-      game.time.events.add(500, collectResourcesAI, this);
+      //initialAIEvents.push( game.time.events.add(500, collectResourcesAI, this) );
+      if ( runInitialAI ) game.time.events.add(500, collectResourcesAI, this);
     }
 
     function spawnUnitAI() {
@@ -946,10 +964,13 @@ window.onload = function () {
             enemyLumber -= 10;
             enemyFood -= 10;
         }
-        game.time.events.add(10000, spawnUnitAI, this);
+        //initialAIEvents.push( game.time.events.add(/*10000*/20, spawnUnitAI, this) );
+        if ( runInitialAI ) game.time.events.add(/*10000*/20, spawnUnitAI, this);
     }
 
     function defendAI() {
+        if ( !runInitialAI ) return;
+
         var compStruct1 = enemyStructureGroup.getTop();
         compDefenseUnits = compDefenseUnits.filter(function(unit) {
             return unit.alive;
@@ -1003,10 +1024,33 @@ window.onload = function () {
             moveDown = false;
         else
             moveDown = true;
-        game.time.events.add(1000, defendAI, this);
+        //initialAIEvents.push( game.time.events.add(1000, defendAI, this) );
+        if ( runInitialAI ) game.time.events.add(1000, defendAI, this);
     }
 
     function attackAI() {
+        if ( !runInitialAI ) return;
+
+        // AI will start branching out from home base and initial home base operations will cease
+        if (computerUnits.countLiving() > 20) {
+            /*
+            initialAIEvents.forEach(
+                function(event){
+                    game.time.events.remove(event);
+                }
+            );
+            */
+            runInitialAI = false;
+            computerUnits.forEachAlive(
+                function(unit){
+                    unit.body.velocity.x = 0;
+                    unit.body.velocity.y = 0;
+                }
+            );
+            initPhase2AI();
+            return;
+        }
+
         var compAttackUnit;
         compAttackUnits = compAttackUnits.filter(function(unit) {
             return unit.alive;
@@ -1040,9 +1084,89 @@ window.onload = function () {
             compAttackUnits = [];
             startAttack = true;
         }
-        game.time.events.add(1000, attackAI, this);
+        //initialAIEvents.push( game.time.events.add(1000, attackAI, this) );
+        if ( runInitialAI ) game.time.events.add(1000, attackAI, this);
 
     }
+
+    function initPhase2AI(){
+        //define the signal:
+        //game.events.onPlayerDamage = new Phaser.Signal();
+        //The listener:
+        //game.events.onPlayerDamage.add(SomeFunctionToCallWhenEventDispatches, this);
+        //Dispatch:
+        //game.events.onPlayerDamage.dispatch()
+        reassignRolesAI();
+        dispatchRolesAI();
+        //enemyStructureAI();
+        // enemy
+
+    }
+
+    function reassignRolesAI(){
+        var roles = ["damBuilder", "harvester", "attacker", "defender"];
+        var x = 0;
+        console.log(computerUnits);
+        computerUnits.forEachAlive(
+            function(unit){
+                if(unit.key == "bear"){
+                    unit.role = "attacker";
+                } else {
+                    unit.role = roles[x % 4];
+                    x++;
+                }
+            }
+        );
+        console.log(computerUnits);
+    }
+
+    function dispatchRolesAI(){
+        computerUnits.forEachAlive(
+            function(unit){
+                if ( unit.role == "damBuilder"){
+                    enemyStructureAI(unit);
+                } else if ( unit.role == "harvester" ){
+                    enemyHarvestAI(unit);
+                } else if ( unit.role == "attacker" ){
+                    enemyAttackerAI(unit);
+                } else if ( unit.role == "defender" ){
+                    enemyDefenderAI(unit);
+                }
+            }
+        );
+        console.log(computerUnits);
+    }
+
+    function enemyStructureAI(damBuilder){
+        //var damBuilder = Structures.chooseDamBuilder(computerUnits);
+        // this will be checked in subsequent iterations over computerUnits group
+        damBuilders.push(damBuilder);
+        Structures.moveBeaverToClosestTree(damBuilder, mapGroup, moveCompUnit);
+        // in update, when beaver overlaps tree, call buildDamAI below...
+    }
+
+    /* Only called from update when one of damBuilders overlaps one of mapGroup */
+    function buildDamAI(beaver, mapResource){
+        if (beaver.buildingDam){
+            return;
+        } else if ( mapResource.key = "tree"  ){
+            stopUnit(beaver, undefined);
+            beaver.buildingDam = true;
+            Structures.addEnemyStructure(game, mapResource, enemyStructureGroup);
+            //enemyLumber -= 10;
+            //enemyFood -= 10;
+        }
+    }
+
+    function checkTree(beaver, tree){
+        return beaver.tree === tree;
+    }
+
+    function enemyHarvestAI(unit){ alert("enemyHarvestAI called");}
+    function enemyAttackerAI(unit){ alert("enemyAttackerAI called");}
+    function enemyDefenderAI(unit){ alert("enemyDefenderAI called");}
+
+
 
   function loadJSON(type, callback) {   
 //https://codepen.io/KryptoniteDove/post/load-json-file-locally-using-pure-javascript
