@@ -835,7 +835,7 @@ window.onload = function () {
                         selectedStructure.tint != 0x00FFFF) {
                         selectedStructure.tint = 0x00FFFF;
                         var selStruct = selectedStructure;
-                        game.time.events.add(5000, function() {
+                        game.time.events.add(8000, function() {
                             selStruct.tint = 0xFFFFFF;
                         }, this);
                         game.resources.lumber -= 10;
@@ -1164,6 +1164,7 @@ window.onload = function () {
             for (i = 0; i < 4; i++) {
                 compAttackUnit = compDefenseUnits.shift();
                 compAttackUnits.push(compAttackUnit);
+                compDefenseUnits.unshift(compDefenseUnits.pop());
             }
           }
           for (var j = 0; j < compAttackUnits.length; j++) {

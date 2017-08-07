@@ -152,7 +152,7 @@ var Structures = {
             selectedStructure.tint = 0x00FFFF;
             selectedStructure.HP = 10000;
             selectedStructure.combat = false;
-            game.time.events.add(10000, function() {
+            game.time.events.add(30000, function() {
                 selectedStructure.tint = 0xFFFFFF;
             }, this);
           
@@ -161,7 +161,7 @@ var Structures = {
 		        sprite.position.y += sprite.game.camera.y;
 
 
-		        game.resources.lumber -= 5;
+		        game.resources.lumber -= 50;
 		        // replace resource tile
 		        replacementSprite = game.add.sprite(originX, originY, sprite.key);
 	            replacementSprite.anchor.setTo(0, 0);
