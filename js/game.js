@@ -942,6 +942,8 @@ window.onload = function () {
     }
 
     function collectResourcesAI() {
+      if ( !runInitialAI ) return;
+
       if (computerUnits.countLiving() > 1) {
         var closestResource;
         var compUnit1 = computerUnits.getChildAt(0);
@@ -1126,6 +1128,7 @@ window.onload = function () {
                 if ( unit.role == "damBuilder"){
                     enemyStructureAI(unit);
                 } else if ( unit.role == "harvester" ){
+                    // wait a few seconds for trees to be marked
                     enemyHarvestAI(unit);
                 } else if ( unit.role == "attacker" ){
                     enemyAttackerAI(unit);
@@ -1162,9 +1165,49 @@ window.onload = function () {
         return beaver.tree === tree;
     }
 
-    function enemyHarvestAI(unit){ alert("enemyHarvestAI called");}
-    function enemyAttackerAI(unit){ alert("enemyAttackerAI called");}
-    function enemyDefenderAI(unit){ alert("enemyDefenderAI called");}
+    function enemyHarvestAI(unit){
+        //alert("enemyHarvestAI called");
+        // unit find nearest tree
+        // move to that tree
+        // unit find nearest dam
+        // move to dam
+        // add lumber points
+        unit.tint = 0x00FFFF;
+        unit.resourceType  = "berry";
+        collectResourceAI2(unit, enemyStructureGroup);
+        // unit find nearest berry bush
+        // move to that berry bush
+        // unit find nearest dam
+        // move to dam
+        // add lumber points
+        //unit.resourceType = "tree";
+        //collectResourceAI2(unit, enemyStructureGroup);
+    }
+
+    function collectResourceAI2(unit, structureGroup){
+        var closestResource;
+        var nearestHome = structureGroup.getClosestTo(unit, function(structure){return structure.key = "dam";});
+        if ((unit.resourceType == 'tree' && unit.lumber == 0) ||
+            (unit.resourceType == 'berry' && unit.food == 0) ) {
+            closestResource = mapGroup.getClosestTo(nearestHome, function(resource){
+                return resource.key == unit.resourceType && resource.markedForDam != true;;
+            });
+            moveCompUnit(unit, closestResource.body.position.x, closestResource.body.position.y);
+        }
+        else if ((unit.resourceType == 'tree' && unit.lumber == 10) ||
+                 (unit.resourceType == 'berry' && unit.food == 10) ) {
+            moveCompUnit(unit, nearestHome.body.position.x, nearestHome.body.position.y);
+        }
+    }
+
+    function enemyAttackerAI(unit){ 
+        //alert("enemyAttackerAI called");
+        // move unit to nearest sawmill
+    }
+    function enemyDefenderAI(unit){
+        //alert("enemyDefenderAI called");
+        // position unit between nearest player and nearest dam
+    }
 
 
 
