@@ -4,7 +4,9 @@ window.onload = function () {
     var saveButton = document.getElementById('savebutton');
 
     saveButton.onclick = function () {
+
         saveGame();
+
     }
     var loadBool;
     if (query == "load") {
@@ -111,25 +113,30 @@ window.onload = function () {
     }
 
     function create() {
-        border = game.add.graphics(0, 0);
-        border.lineStyle(3, 0x00000000, 1);
-        border.drawRect(1, 1, WORLD_WIDTH -3, WORLD_HEIGHT - UI_HEIGHT*2 - 3);
-        border.endFill();
-        border.z = -99999;
+border = game.add.graphics(0, 0);
+                            border.lineStyle(3, 0x00000000, 1);
+                    border.drawRect(1, 1, WORLD_WIDTH -3, WORLD_HEIGHT - UI_HEIGHT*2 - 3);
+                    border.endFill();
+                    border.z = -99999;
         game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
         bgm = game.add.audio('bgm');
         game.physics.startSystem(Phaser.Physics.ARCADE);
         game.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT - UI_HEIGHT);
         game.physics.setBoundsToWorld();					
         createGroups();
+        loadMap();
         initResourceCount();
+
         loadUserInterface();
+
         unitCount = 0;
 
         if (loadBool) {
+
             loadGame();
         }
         else {
+
             loadMap();
             createUnits();
         }
@@ -137,22 +144,36 @@ window.onload = function () {
         spawnUnitAI();
         defendAI();
         attackAI();
+
         selectWindowFlag = false;
+
         game.input.mousePointer.leftButton.onDown.add(selectUnit, this);
+
         game.input.mousePointer.rightButton.onUp.add(moveUnit, this);
 		downKey = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
         upKey = game.input.keyboard.addKey(Phaser.Keyboard.UP);
+
         leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
         rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+
         gameOver = false;
+
         game.sound.setDecodedCallback([bgm], start, this);
+
         game.input.
         currStructCount = 1;
         spawnFlag = true;
         moveDown = true;
         startAttack = true;
         selectWindow = new Phaser.Rectangle(0, 0, 10, 10);							   
-		game.world.bringToTop(uiGroup);
+		uiGroup.z = -9999;
+								 
+
+							 
+								 
+										  
+							  
+						   
     }
 
     function start() {
@@ -160,9 +181,15 @@ window.onload = function () {
     }
 
     function update() {
+							   
+		   
+
+							 
+		   
         if (!gameOver) {
             updateCameraView();
             updateUIText();
+
             selectedUnit = selectedUnit.filter(function(unit) {
                 return unit.alive;
             });
@@ -188,7 +215,7 @@ window.onload = function () {
                     unit.loadTexture('woodsman');
                 if (unit.gather)
                     collectResourceAI(unit, playerStructureGroup);
-                if (unit.heal && unit.healSprite) {
+                if (unit.heal) {
                     unit.healSprite.x = unit.x;
                     unit.healSprite.y = unit.y;
                 }
@@ -204,7 +231,7 @@ window.onload = function () {
                     unit.loadTexture('bear');
                 if (unit.gather)
                     collectResourceAI(unit, enemyStructureGroup);
-                if (unit.heal && unit.healSprite) {
+                if (unit.heal) {
                     unit.healSprite.x = unit.x;
                     unit.healSprite.y = unit.y;
                 }
@@ -345,6 +372,7 @@ window.onload = function () {
                 selectedUnit.push(playerUnits.children[i]);
                 //console.log(playerUnits.children[i]);
                 selectedStructure = null;
+				 
             }
         }
         for (i = 0; i < playerStructureGroup.children.length; i++) {
@@ -354,7 +382,10 @@ window.onload = function () {
                 if (selectedStructure.tint != 0x00FFFF) {
                     playerStructureGroup.children[i].tint = 0xFFDF00;
                     selectedUnit = [];
-                }											 
+					 
+                }
+																																	 
+																	 
             }
             else if (playerStructureGroup.children[i].tint == 0xFFDF00)
                 playerStructureGroup.children[i].tint = 0xFFFFFF;
@@ -400,7 +431,11 @@ window.onload = function () {
             game['destPoint' + unit.name].width = 10;
             game['destPoint' + unit.name].height = 10;
             game['destPoint' + unit.name].enableBody = true;
-            game.physics.arcade.enable(game['destPoint' + unit.name]);											 
+            game.physics.arcade.enable(game['destPoint' + unit.name]);
+												
+											
+														   
+																	 
             game.physics.arcade.moveToObject(unit, game['destPoint' + unit.name], VELOCITY);
         }
     }
@@ -441,6 +476,7 @@ window.onload = function () {
                     else {
                         unit.body.position.y += TILE_LENGTH / 8;
                         destSprite.body.position.y -= TILE_LENGTH / 8;
+
                     }
                 }
             }
@@ -496,7 +532,7 @@ window.onload = function () {
                 });
             }
             else {
-                if (unit.healSprite && unit.healSprite.alpha > 0.05) {
+                if (unit.healSprite.alpha > 0.05) {
                     unit.healSprite.alpha -= 0.05;
                 }
             }
@@ -659,12 +695,15 @@ window.onload = function () {
         game.sound.setDecodedCallback([bgm], create, this);
     }
 
-    function loadMap() {						  
+    function loadMap() {
+
+											  
         var tile;
         var treeSparsityFactor = 10;
         var resourceSparsityFactor = 3;
         var treeFlag = true;
         var secondClick = false;
+
         game.stage.backgroundColor = 0x22b14c;
         for (var j = 0; j < 100; j++) {
             var coords = gridCoordsGenerator.getCoords(3);
@@ -684,6 +723,7 @@ window.onload = function () {
                     tile.height = TILE_LENGTH;
                     treeFlag = true;
                     tile.type = 'berry';
+
                 }
             }
             else {
@@ -732,13 +772,16 @@ window.onload = function () {
             playerStructureGroup.enableBody = true;
 			//structure.HP = 25000;
             //structure.Attack = 15;
-            //structure.Defense = 20;		
+            //structure.Defense = 20;					 
+								  
+								   
         });
 
         enemyStructureGroup.forEach(function (structure){
             structure.HP = 25000;
             structure.Attack = 15;
             structure.Defense = 20;
+
         });
     }
 
@@ -756,6 +799,7 @@ window.onload = function () {
         var y = CAMERA_HEIGHT - UI_HEIGHT + TILE_LENGTH;
         for (var i = 1; i <= structureSprites.length; i++) {
             x = i * TILE_LENGTH + TILE_LENGTH / 2;
+
             uiSprite = game.add.sprite(x, y, structureSprites[i-1]);
             uiSprite.anchor.setTo(0, 0);
             uiSprite.type = 'structure';
@@ -983,8 +1027,11 @@ window.onload = function () {
             });
             }
         }
+
         uiSelectedUnit.width = UI_HEIGHT;
         uiSelectedUnit.height = UI_HEIGHT;
+
+
     }
 
     function checkGameOver() {
@@ -1003,6 +1050,13 @@ window.onload = function () {
         }
     }
 
+
+									  
+										   
+																														
+												
+									   
+ 
     function createUnits() {
         var playerUnitX = playerStructureGroup.getTop().position.x;
         var playerUnitY = playerStructureGroup.getTop().position.y;
@@ -1026,6 +1080,8 @@ window.onload = function () {
         else if (playerUnitX + 2 * TILE_LENGTH > WORLD_WIDTH) {
             spawnPlayerUnit(playerUnitX + 2 * TILE_LENGTH, playerUnitY, 'woodsman');
         }
+
+
         spawnEnemyUnit(computerUnitX, computerUnitY, 'bear');
         selectedUnit.push(playerUnits.children[0]);
     }
@@ -1057,6 +1113,7 @@ window.onload = function () {
         playerUnitCount += 1;
         //console.log("spawned unit");
     }
+
 
     function spawnEnemyUnit(x, y, type) {
         //console.log(units);
@@ -1176,6 +1233,9 @@ window.onload = function () {
                             yOffset = -yOffset;
                     }
                     if (i < 4)
+										   
+				 
+						  
                         yOffset = (i % 2) * yOffsetGlobal + yOffset;
                     else if (i < 12)
                         xOffset = ((i % 2) - 1) * xOffsetGlobal - xOffset;
@@ -1200,126 +1260,35 @@ window.onload = function () {
         if (computerUnits.countLiving() > 17) {
           if (compDefenseUnits.length >= 16) {
             for (i = 0; i < 4; i++) {
-                compAttackUnit = compDefenseUnits.shift();														  
+                compAttackUnit = compDefenseUnits.shift();
+																															  
+																													  
                 compAttackUnits.push(compAttackUnit);
-                compDefenseUnits.unshift(compDefenseUnits.pop());	
+
+				 
+							  
+																			
+                compDefenseUnits.unshift(compDefenseUnits.pop());
+																 
+													   
+					 
+				   
+									
             }
           }
           for (var j = 0; j < compAttackUnits.length; j++) {
               moveCompUnit(compAttackUnits[j], playerStructureGroup.getTop().body.position.x,
               playerStructureGroup.getTop().body.position.y);
+				 
           }
         }
         else {
-            compAttackUnits = [];		   
+            compAttackUnits = [];
+							   
         }
         if (!gameOver)
             game.time.events.add(1000, attackAI, this);
-    }
 
-function saveGame() {
-        var gameState = {};
-        //gameState.playerStructures = playerStructureGroup;
-        //gameState.playerUnits = playerUnits;
-        //gameState.computerUnits  = computerUnits;
-        //gameState.computerStructures = enemyStructureGroup;
-        gameState.DIFFICULTY =
-        gameState.playerStructures = {};
-        gameState.playerUnits = {};
-        gameState.computerUnits = {};
-        gameState.computerStructures = {}; 0
-        var savePlayerStructureGroup = [];
-        playerStructureGroup.forEach(function (structure) {
-            var saveStruct = {
-                'HP': structure.HP,
-
-                'position': structure.body.position,
-            };
-            savePlayerStructureGroup.push(saveStruct);
-
-        });
-        var savePlayerUnitsGroup = [];
-        console.log(playerUnits);
-        playerUnits.children.forEach(function (unit) {
-            var saveUnit = {
-                'HP': unit.HP,
-                'Max_HP': unit.Max_HP,
-                'Attack': unit.Attack,
-                'Defense': unit.Defense,
-                'position': unit.body.position,
-                'lumber': unit.lumber,
-                'food': unit.food,
-                'type': unit.type,
-            };
-            savePlayerUnitsGroup.push(saveUnit);
-
-        });
-        var saveComputerUnitsGroup = [];
-        computerUnits.children.forEach(function (unit) {
-            var saveUnit = {
-                'HP': unit.HP,
-                'Max_HP': unit.Max_HP,
-                'Attack': unit.Attack,
-                'Defense': unit.Defense,
-                'position': unit.body.position,
-                'lumber': unit.lumber,
-                'food': unit.food,
-                'type': unit.type,
-            };
-            saveComputerUnitsGroup.push(saveUnit);
-
-        });
-
-
-        var saveMapGroup = [];
-        mapGroup.children.forEach(function (tile) {
-            var saveTile = {
-                'position': tile.body.position,
-                'type': tile.key,
-            };
-
-            saveMapGroup.push(saveTile);
-        });
-
-        var savePlayerStructureGroup = [];
-        playerStructureGroup.children.forEach(function (structure) {
-            var savePlayerStructure = {
-                'position': structure.body.position,
-                'Attack': structure.Attack,
-                'Defense': structure.Defense,
-                'HP': structure.HP,
-                'type': structure.key,
-            };
-
-            savePlayerStructureGroup.push(savePlayerStructure);
-        });
-
-        var saveEnemyStructureGroup = [];
-        enemyStructureGroup.children.forEach(function (structure) {
-            var saveEnemyStructure = {
-                'position': structure.body.position,
-                'Attack': structure.Attack,
-                'Defense': structure.Defense,
-                'HP': structure.HP,
-                'type': structure.key,
-            };
-
-            saveEnemyStructureGroup.push(saveEnemyStructure);
-        });
-
-
-        gameState.playerStructuresGroup = savePlayerStructureGroup;
-
-        gameState.enemyStructuresGroup = saveEnemyStructureGroup;
-        gameState.playerUnits = savePlayerUnitsGroup;
-        gameState.computerUnits = saveComputerUnitsGroup;
-        gameState.mapGroup = saveMapGroup;
-        var gameStateJson = JSON.stringify(gameState);
-        localStorage.setItem('lumberjacksvsbeaverssave', gameStateJson);
-
-        var gameStateJson = localStorage.getItem('lumberjacksvsbeaverssave');
-
-        announceText = game.add.text(TILE_LENGTH + 5, CAMERA_HEIGHT - UI_HEIGHT + 5, "GAME SAVED!");
     }
 
   function loadJSON(type, callback) {   
@@ -1335,103 +1304,4 @@ function saveGame() {
     };
     xobj.send(null);  
  }	 
-
-    function loadGame() {
-        game.stage.backgroundColor = 0x22b14c;
-        var gameStateJson = localStorage.getItem('lumberjacksvsbeaverssave');
-        var gameState = JSON.parse(gameStateJson);
-        console.log(gameState);
-        gameState.playerUnits.forEach(function (unit) {
-            loadPlayerUnits(unit);
-        });
-        gameState.computerUnits.forEach(function (unit) {
-            loadComputerUnits(unit);
-        });
-        gameState.mapGroup.forEach(function (tile) {
-            loadMapGroup(tile);
-        });
-        gameState.playerStructuresGroup.forEach(function (structure) {
-            loadPlayerStructures(structure);
-        });
-        gameState.enemyStructuresGroup.forEach(function (structure) {
-            loadEnemyStructures(structure);
-        });
-        DIFFICULTY = gameState.DIFFICULTY;
-
-        return;
-    }
-
-     function loadPlayerUnits(unit) {
-        var unitData = units[unit.type];
-        var playerUnit = playerUnits.create(unit.position.x, unit.position.y, unit.type);
-        playerUnit.name = "playerUnit" + playerUnitCount;
-        playerUnit.type = unit.type;
-        playerUnit.width = 40; //possibly make variable based on unit file later
-        playerUnit.height = 40;//possibly make variable based on unit file later
-        playerUnit.anchor.setTo(0, 0);
-        playerUnit.HP = unit.HP;
-        playerUnit.Max_HP = unit.max_hp;
-        playerUnit.Attack = unit.Attack;
-        playerUnit.Defense = unit.Defense;
-        playerUnit.food = unit.food;
-        playerUnit.lumber = unit.lumber;
-        playerUnit.gather = false;
-        playerUnit.resourceType = 'tree';
-        game.physics.arcade.enable(playerUnit);
-        playerUnit.enableBody = true;
-        playerUnit.body.position = unit.position;
-        playerUnitCount += 1;
-        playerUnit.checkWorldBounds = true;
-        //console.log("spawned unit");
-    }
-
-    function loadComputerUnits(unit) {
-        var unitData = units[unit.type];
-        var computerUnit = computerUnits.create(unit.position.x, unit.position.y, unit.type);
-        computerUnit.name = "computerUnit" + enemyUnitCount;
-        computerUnit.type = unit.type;
-        computerUnit.width = 40; //possibly make variable based on unit file later
-        computerUnit.height = 40;//possibly make variable based on unit file later
-        computerUnit.anchor.setTo(0, 0);
-        computerUnit.HP = unit.HP;
-        computerUnit.Max_HP = unit.max_hp;
-        computerUnit.Attack = unit.Attack;
-        computerUnit.Defense = unit.Defense;
-        computerUnit.food = unit.food;
-        computerUnit.lumber = unit.lumber;
-        computerUnit.gather = false;
-        computerUnit.resourceType = 'tree';
-        game.physics.arcade.enable(computerUnit);
-        computerUnit.enableBody = true;
-        enemyUnitCount += 1;
-    }
-
-    function loadMapGroup(tile) {
-        var newTile = mapGroup.create(tile.position.x, tile.position.y, tile.type);
-        newTile.type = tile.type;
-        newTile.width = TILE_LENGTH;
-        newTile.height = TILE_LENGTH;
-        newTile.anchor.setTo(0, 0);
-        mapGroup.add(newTile);
-        newTile.inputEnabled = true;
-        game.physics.arcade.enable(newTile);
-        newTile.collectFlag = true;
-    }
-
-    function loadPlayerStructures(structure) {
-        var newStructure = playerStructureGroup.create(structure.position.x, structure.position.y, structure.type);
-        game.physics.arcade.enable(newStructure);
-        newStructure.Attack = structure.Attack;
-        newStructure.Defense = structure.Defense;
-        newStructure.HP = structure.HP;
-        newStructure.enableBody = true;
-    }
-    function loadEnemyStructures(structure) {
-        var newStructure = enemyStructureGroup.create(structure.position.x, structure.position.y, structure.type);
-        game.physics.arcade.enable(newStructure);
-        newStructure.Attack = structure.Attack;
-        newStructure.Defense = structure.Defense;
-        newStructure.HP = structure.HP;
-        newStructure.enableBody = true;
-    }
 };
