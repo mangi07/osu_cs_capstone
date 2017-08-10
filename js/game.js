@@ -49,6 +49,10 @@ window.onload = function () {
     var selectWindow;
     var selectWindowFlag;
     var selectionChange;
+    var runInitialAI = true;
+    var damBuilders = [];
+    var harvesters = [];
+    var attackers = [];
   
     var units = {};
     //change this to a loop over an array of unit types??
@@ -225,7 +229,6 @@ window.onload = function () {
                 for (var j = 0; j < playerUnits.children.length; j++) { // suggest var j = i if it helps performance
                     game.physics.arcade.overlap(playerUnits.children[i], playerUnits.children[j], stopUnit, null, this);
                 }
-                // TODO: units get stuck on overlap
                 game.physics.arcade.overlap(playerUnits.children[i], playerStructureGroup, healUnit, null, this);
                 game.physics.arcade.overlap(playerUnits.children[i], enemyStructureGroup, structureDamage, null, this);
 
@@ -251,6 +254,8 @@ window.onload = function () {
 
             // when placing a resource and dragging over a sprite it should not overlap, tint the dragged resource red
             Structures.update(game, uiGroup, [playerStructureGroup, enemyStructureGroup, mapGroup, playerUnits, computerUnits]);
+            // AI2 overlaps and updates
+            AI2Updates();
 
             if (spawnFlag) {
                 spawnFlag = false;
@@ -367,7 +372,11 @@ window.onload = function () {
     }
 
     function render() {
-
+        //game.debug(game.timer, 32, 32);
+        game.debug.text("Queued events: " + game.time.events.length, 32, 32);
+        game.debug.text("Total enemy units: " + computerUnits.length, 32, 70);
+        game.debug.text("Enemy lumber: " + enemyLumber, 32, 90);
+        game.debug.text("Enemy food: " + enemyFood, 32, 110);
         //game.debug.cameraInfo(game.camera, 32, 32);
         //game.debug.pointer(game.input.mousePointer);
     }
@@ -1051,6 +1060,8 @@ window.onload = function () {
     }
 
     function collectResourceAI(unit, structureGroup) {
+        if ( !runInitialAI ) return;
+
         var closestResource;
         var nearestHome = structureGroup.getBottom();
         if ((unit.resourceType == 'tree' && unit.lumber == 0) ||
@@ -1066,19 +1077,22 @@ window.onload = function () {
     }
 
     function collectResourcesAI() {
-        if (computerUnits.countLiving() > 1) {
-            var closestResource;
-            var compUnit1 = computerUnits.getChildAt(0);
-            var compUnit2 = computerUnits.getChildAt(1);
-            compUnit1.gather = true;
-            compUnit1.resourceType = 'tree';
-            compUnit2.gather = true;
-            compUnit2.resourceType = 'berry';
-            compCollectUnit1 = compUnit1;
-            compCollectUnit2 = compUnit2;
-        }
-        if (!gameOver)
-            game.time.events.add(500, collectResourcesAI, this);
+      if ( !runInitialAI ) return;
+
+      if (computerUnits.countLiving() > 1) {
+        var closestResource;
+        var compUnit1 = computerUnits.getChildAt(0);
+        var compUnit2 = computerUnits.getChildAt(1);
+        compUnit1.gather = true;
+        compUnit1.resourceType = 'tree';
+        compUnit2.gather = true;
+        compUnit2.resourceType = 'berry';
+        compCollectUnit1 = compUnit1;
+        compCollectUnit2 = compUnit2;
+      }
+      //initialAIEvents.push( game.time.events.add(500, collectResourcesAI, this) );
+      if ( runInitialAI ) game.time.events.add(500, collectResourcesAI, this);
+
     }
 
     function spawnUnitAI() {
@@ -1091,11 +1105,13 @@ window.onload = function () {
             enemyLumber -= 10;
             enemyFood -= 10;
         }
-        if (!gameOver)
-            game.time.events.add(10000, spawnUnitAI, this);
+        if (!gameOver && runInitialAI)
+            game.time.events.add(/*10000*/20, spawnUnitAI, this);
     }
 
     function defendAI() {
+        if ( !runInitialAI ) return;
+
         var compStruct1 = enemyStructureGroup.getTop();
         compDefenseUnits = compDefenseUnits.filter(function(unit) {
             return unit.alive;
@@ -1103,7 +1119,7 @@ window.onload = function () {
         if (computerUnits.countLiving() < 3) {
             compDefenseUnits = [];
         }
-        else {
+        else if (compDefenseUnits.length < 12) {
             computerUnits.forEachAlive(function(unit) {
                 if (unit != compCollectUnit1 && unit != compCollectUnit2 &&
                     compDefenseUnits.indexOf(unit) == -1 &&
@@ -1155,6 +1171,29 @@ window.onload = function () {
     }
 
     function attackAI() {
+        if ( !runInitialAI ) return;
+
+        // AI will start branching out from home base and initial home base operations will cease
+        if (computerUnits.countLiving() > 12) {
+            /*
+            initialAIEvents.forEach(
+                function(event){
+                    game.time.events.remove(event);
+                }
+            );
+            */
+            runInitialAI = false;
+            computerUnits.forEachAlive(
+                function(unit){
+                    unit.body.velocity.x = 0;
+                    unit.body.velocity.y = 0;
+                }
+            );
+            //game.time.events.add(initPhase2AI, 1000, this);
+            initPhase2AI();
+            return;
+        }
+
         var compAttackUnit;
         compAttackUnits = compAttackUnits.filter(function(unit) {
             return unit.alive;
@@ -1175,8 +1214,228 @@ window.onload = function () {
         else {
             compAttackUnits = [];
         }
-        if (!gameOver)
+        if (!gameOver && runInitialAI)
             game.time.events.add(1000, attackAI, this);
+    }
+
+    function initPhase2AI(){
+        alert("called");
+        reassignRolesAI();
+        dispatchRolesAI();
+        game.time.events.loop(20000, function() {
+            reassignRolesAI();
+            dispatchRolesAI();
+        });
+    }
+
+    function reassignRolesAI(){
+        var roles = ["damBuilder", "harvester", "attacker", "defender"];
+        var x =  game.rnd.integerInRange(0, 3);
+        console.log(computerUnits);
+        computerUnits.forEachAlive(
+            function(unit){
+                //if(unit.key == "bear" || unit.key == "bear-left"){
+                //    unit.role = "attacker";
+                //} else {
+                    unit.role = roles[x % 4];
+                    x++;
+                //}
+            }
+        );
+        console.log(computerUnits);
+    }
+
+    var defenseLoops = [];
+    function dispatchRolesAI(){
+        if(defenseLoops && defenseLoops.length > 0){
+            defenseLoops.forEach(function(event){
+                game.time.events.remove(event);
+            });
+            alert("defenseLoop");
+        }
+        computerUnits.forEachAlive(
+            function(unit){
+                if ( unit.role == "damBuilder"){
+                    enemyStructureAI(unit);
+                } else if ( unit.role == "harvester" ){
+                    // wait a few seconds for trees to be marked
+                    enemyHarvestAI(unit, "berry");
+                } else if ( unit.role == "attacker" ){
+                    enemyAttackerAI(unit);
+                } else if ( unit.role == "defender" ){
+                    var loopEvent = game.time.events.loop(1000, function() {
+                        enemyDefenderAI(unit);
+                    });
+                    defenseLoops.push(loopEvent);
+                }
+            }
+        );
+    }
+
+    function enemyStructureAI(damBuilder){
+        //var damBuilder = Structures.chooseDamBuilder(computerUnits);
+        // this will be checked in subsequent iterations over computerUnits group
+        damBuilders.push(damBuilder);
+        Structures.moveBeaverToClosestTree(damBuilder, mapGroup, moveCompUnit);
+        // in update, when beaver overlaps tree, call buildDamAI below...
+    }
+
+    /* Only called from update when one of damBuilders overlaps one of mapGroup */
+    function buildDamAI(beaver, mapResource){
+        if (beaver.buildingDam){
+            return;
+        } else if ( mapResource.key = "tree"  ){
+            stopUnit(beaver, undefined);
+            beaver.buildingDam = true;
+            Structures.addEnemyStructure(game, mapResource, enemyStructureGroup);
+        }
+    }
+
+    function checkTree(beaver, tree){
+        return beaver.tree === tree;
+    }
+
+    function checkResource(unit, resource){
+        return unit.resource === resource;
+    }
+
+    function checkHome(unit, home){
+        return home.key == "dam";
+    }
+
+    function enemyHarvestAI(unit, resourceType){
+        // unit find nearest resource
+        // move to that resource
+        // unit find nearest dam
+        // move to dam
+        // add resource points
+        unit.tint = 0x00FFFF;
+        unit.resourceType  = resourceType;
+        unit.harvestMode = "gather";
+        harvesters.push(unit);
+        unit.home = findNearestHome(unit, enemyStructureGroup);
+        unit.resource = findClosestResource(unit, unit.home);
+        collectResourceAI2(unit, enemyStructureGroup, unit.resource, unit.home);
+    }
+
+    function collisionResourceAI2(unit, otherSprite){
+        unit.lumber = 10;
+        unit.food = 10;
+        if (unit.harvestMode == "gather")
+            unit.harvestMode = "deliver";
+        else
+            unit.harvestMode = "gather";
+        // pause before changing directions
+        unit.body.velocity.y = 0;
+        unit.body.velocity.x = 0;
+        game.time.events.add(4000, function(){
+            collectResourceAI2(unit, enemyStructureGroup, unit.resource, unit.home);
+        });
+    }
+
+    function findClosestResource(unit, nearestHome){
+        closestResource = mapGroup.getClosestTo(nearestHome, function(resource){
+                return resource.key == unit.resourceType && resource.markedForDam != true && 
+                    resource.markedForCollection != true;
+            });
+            closestResource.markedForCollection = true;
+        return closestResource;
+    }
+
+    function findNearestHome(unit, structureGroup){
+        return structureGroup.getClosestTo(unit, function(structure){return structure.key = "dam";});
+    }
+
+    function collectResourceAI2(unit, structureGroup, closestResource, nearestHome){
+        if (unit.harvestMode == "gather") { // unit should have just reached home
+            //unit.lumber = 10;
+            //unit.food = 10;   
+            closestResource.tint = 0x0000FF;
+            moveCompUnit(unit, closestResource.body.position.x, closestResource.body.position.y);
+        }
+        else if (unit.harvestMode == "deliver" ) { // unit should have just reached resource
+            //unit.lumber = 0;
+            //unit.food = 0;
+            moveCompUnit(unit, nearestHome.body.position.x, nearestHome.body.position.y);
+        }
+    }
+
+    function enemyAttackerAI(unit){ 
+        //alert("enemyAttackerAI called");
+        // move unit to nearest sawmill
+        unit.tint = 0xFFDF00;
+        attackers.push(unit);
+        unit.nearestPlayerStructure = playerStructureGroup.getClosestTo(
+            unit, function(structure){
+                return structure.key = "sawmill";
+        });
+        moveCompUnit(unit, unit.nearestPlayerStructure.body.position.x, 
+            unit.nearestPlayerStructure.body.position.y);
+    }
+
+    function enemyDefenderAI(unit){
+        //alert("enemyDefenderAI called");
+        // position unit between nearest player and nearest dam
+        var nearestPlayer = playerUnits.getClosestTo(unit);
+        var nearestDam = enemyStructureGroup.getClosestTo(unit);
+        if(nearestPlayer == undefined || nearestDam == undefined) return;
+        // find midway coordinates between the two
+        var midpoint = getMidpoint(nearestPlayer.body.position.x, nearestPlayer.body.position.y,
+                                    nearestDam.body.position.x, nearestDam.body.position.y);
+        // move unit to that midway point
+        moveCompUnit(unit, midpoint[0], midpoint[1]);
+        // repeat after so many seconds - set event as a loop?
+        
+        // remember on changing roles to stop the looping that was set here
+    }
+
+    /* Borrowed from user "Forgeable Sum" at: https://github.com/photonstorm/phaser/issues/2040
+    on 8/10/2017 */
+    function getMidpoint(x1, y1, x2, y2) {
+
+        var midX = (x1 + x2) / 2;
+        var midY = (y1 + y2) / 2;
+
+        return [midX, midY];
+    }
+
+    /* TODO: finish refactoring */
+    function fastResourceGather(){
+        //unit.body.moves = false;
+        var resourceX = closestResource.body.position.x;
+        var resourceY = closestResource.body.position.y;
+        var homeX = nearestHome.body.position.x;
+        var homeY = nearestHome.body.position.y;
+        unit.resourceTween = game.add.tween(unit).to({x:resourceX,y:resourceY},4000);
+        unit.homeTween = game.add.tween(unit).to({x:homeX,y:homeY},4000);
+        unit.resourceTween.chain(unit.homeTween);
+        unit.homeTween.chain(unit.resourceTween);
+        unit.resourceTween.start();
+    }
+
+    function AI2Updates(){
+        for (var i = 0; i < damBuilders.length; i++){
+            game.physics.arcade.overlap(damBuilders[i], mapGroup, buildDamAI, checkTree, this);
+        }
+        for (var i = 0; i < harvesters.length; i++){
+            if (harvesters[i].harvestMode == "gather"){
+                game.physics.arcade.overlap(harvesters[i], mapGroup, 
+                collisionResourceAI2, checkResource, this);    
+            }
+            if (harvesters[i].harvestMode == "deliver"){
+                game.physics.arcade.overlap(harvesters[i], enemyStructureGroup, 
+                collisionResourceAI2, checkHome, this);
+            }   
+        }
+        for (var i = 0; i < damBuilders.length; i++){
+            game.physics.arcade.overlap(damBuilders[i], mapGroup, buildDamAI, checkTree, this);
+        }
+        for (var i = 0; i < attackers.length; i++){
+            game.physics.arcade.overlap(attackers[i], playerStructureGroup, function(){
+                attackers[i].body.velocity.x = 0;
+                attackers[i].body.velocity.y = 0;
+            }, null, this);
+        }
     }
 
   function loadJSON(type, callback) {   
