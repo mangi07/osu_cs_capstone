@@ -1,6 +1,6 @@
 window.onload = function () {
-	var query = window.location.search.substring(1);
-    var DIFFICULTY;
+    var query = window.location.search.substring(1);
+    var DIFFICULTY = false;
     var saveButton = document.getElementById('savebutton');
 
     saveButton.onclick = function () {
@@ -12,12 +12,12 @@ window.onload = function () {
     }
     else if (query == "easy") {
         loadBool = false;
-        DIFFICULTY = "easy";
+        DIFFICULTY = false;
     }
 
     else if (query == "hard") {
         loadBool = false;
-        DIFFICULTY = "hard";
+        DIFFICULTY = true;
     }
     //var CAMERA_WIDTH = 1536;
     var CAMERA_WIDTH = 1280;
@@ -31,6 +31,9 @@ window.onload = function () {
     var STARTINGLUMBER = 100;
     var STARTINGFOOD = 100;
     var UI_HEIGHT = 2 * TILE_LENGTH + TILE_LENGTH / 4;
+    var LUMBER_PER_TREE = 160;
+    var FOOD_PER_BUSH = 160;
+    var RESOURCE_PER_GATHER = 10;
     var mapGroup;
     var uiGroup;
     var gridCoordsGenerator = new GridCoordinatesGenerator(
@@ -177,6 +180,16 @@ window.onload = function () {
                     });
                 }
             }
+            mapGroup.forEach(function(resource) {
+                if (resource.type == 'tree' &&
+                    resource.count <= LUMBER_PER_TREE/2) {
+                    resource.loadTexture('cut-tree');
+                }
+                else if (resource.type == 'berry' &&
+                         resource.count <= FOOD_PER_BUSH/2) {
+                    resource.loadTexture('cut-berry');
+                }
+            });
             playerUnits.forEach(function(unit) {
                 if (unit.key == 'lumberjack' && unit.body.velocity.x < 0)
                     unit.loadTexture('lumberjack-left');
@@ -317,12 +330,20 @@ window.onload = function () {
             //console.log(enemyLumber + " " + enemyFood);
             game.time.events.add(5000, function () {
                 if (resource.type == 'tree') {
-                    if (unit.lumber == 0)
-                        unit.lumber = 10;
+                    if (unit.lumber == 0) {
+                        unit.lumber = RESOURCE_PER_GATHER;
+                        resource.count -= RESOURCE_PER_GATHER;
+                        if (resource.count <= 0)
+                            resource.destroy();
+                    }
                 }
                 else {
-                    if (unit.food == 0)
-                        unit.food = 10;
+                    if (unit.food == 0) {
+                        unit.food = RESOURCE_PER_GATHER;
+                        resource.count -= RESOURCE_PER_GATHER;
+                        if (resource.count <= 0)
+                            resource.destroy();
+                    }
                 }
                 resource.collectFlag = true;
             }, this);
@@ -703,7 +724,10 @@ window.onload = function () {
             tile.inputEnabled = true;
             game.physics.arcade.enable(tile);
             tile.collectFlag = true;
-			
+            if (tile.type == 'tree')
+                tile.count = LUMBER_PER_TREE;
+            else
+                tile.count = FOOD_PER_BUSH;
         }
 	 
         /*
@@ -1105,18 +1129,15 @@ window.onload = function () {
 
     function collectResourcesAI() {
         if (computerUnits.countLiving() > 1) {
-            var closestResource;
-            var compUnit1 = computerUnits.getChildAt(0);
-            var compUnit2 = computerUnits.getChildAt(1);
-            compUnit1.gather = true;
-            compUnit1.resourceType = 'tree';
-            compUnit2.gather = true;
-            compUnit2.resourceType = 'berry';
-            compCollectUnit1 = compUnit1;
-            compCollectUnit2 = compUnit2;
+            compCollectUnit1 = computerUnits.getChildAt(0);
+            compCollectUnit2 = computerUnits.getChildAt(1);
+            compCollectUnit1.gather = true;
+            compCollectUnit1.resourceType = 'tree';
+            compCollectUnit2.gather = true;
+            compCollectUnit2.resourceType = 'berry';
         }
         if (!gameOver)
-            game.time.events.add(500, collectResourcesAI, this);
+            game.time.events.add(1000, collectResourcesAI, this);
     }
 
     function spawnUnitAI() {
@@ -1129,8 +1150,12 @@ window.onload = function () {
             enemyLumber -= 10;
             enemyFood -= 10;
         }
-        if (!gameOver)
-            game.time.events.add(10000, spawnUnitAI, this);
+        if (!gameOver) {
+            if (DIFFICULTY)
+                game.time.events.add(5000, spawnUnitAI, this);
+            else
+                game.time.events.add(10000, spawnUnitAI, this);
+        }
     }
 
     function defendAI() {
@@ -1152,6 +1177,20 @@ window.onload = function () {
         }
         xOffsetGlobal = 2*TILE_LENGTH;
         yOffsetGlobal = 2*TILE_LENGTH;
+        var target = playerUnits.getClosestTo(compStruct1);
+        var dist = Phaser.Math.distance(target.x, target.y, compStruct1.x,
+                                        compStruct1.y);
+        var defenseNum;
+        if (DIFFICULTY)
+            defenseNum = compDefenseUnits.length/2;
+        else
+            defenseNum = compDefenseUnits.length;
+        if (dist < 2*TILE_LENGTH) {            
+            for (i = 0; i < defenseNum; i++) {
+                moveCompUnit(compDefenseUnits[i], target.x, target.y);
+            }
+        }
+        else {
         for (i = 0; i < compDefenseUnits.length; i++) {
             if (compDefenseUnits[i].alive){
                     stopUnit(compDefenseUnits[i], undefined);
@@ -1188,6 +1227,7 @@ window.onload = function () {
             moveDown = false;
         else
             moveDown = true;
+        }
         if (!gameOver)
             game.time.events.add(1000, defendAI, this);
     }
@@ -1223,7 +1263,7 @@ function saveGame() {
         //gameState.playerUnits = playerUnits;
         //gameState.computerUnits  = computerUnits;
         //gameState.computerStructures = enemyStructureGroup;
-        gameState.DIFFICULTY =
+        gameState.DIFFICULTY = DIFFICULTY;
         gameState.playerStructures = {};
         gameState.playerUnits = {};
         gameState.computerUnits = {};
