@@ -116,13 +116,13 @@ window.onload = function () {
     function create() {
         border = game.add.graphics(0, 0);
         border.lineStyle(3, 0x00000000, 1);
-        border.drawRect(1, 1, WORLD_WIDTH -3, WORLD_HEIGHT - UI_HEIGHT*2 - 3);
+        border.drawRect(1, 1, WORLD_WIDTH -3, WORLD_HEIGHT - UI_HEIGHT - 3);
         border.endFill();
         border.z = -99999;
         game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
         bgm = game.add.audio('bgm');
         game.physics.startSystem(Phaser.Physics.ARCADE);
-        game.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT - UI_HEIGHT);
+        game.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
         game.physics.setBoundsToWorld();					
         createGroups();
         initResourceCount();
@@ -775,7 +775,7 @@ window.onload = function () {
         uiBackground.height = UI_HEIGHT;
         uiGroup.add(uiBackground);
         addingStructureGroup.inputEnableChildren = true;
-        var structureSprites = ["sawmill", "structure", "structure", "structure", "structure"];
+        var structureSprites = ["sawmill", "sawmill"];
         var x;
         var y = CAMERA_HEIGHT - UI_HEIGHT + TILE_LENGTH;
         for (var i = 1; i <= structureSprites.length; i++) {
@@ -853,7 +853,7 @@ window.onload = function () {
             );
                 }
                 else if (sprite.num == 2) {
-            var structure = game.add.sprite(sprite.position.x, sprite.position.y, 'structure');
+            var structure = game.add.sprite(sprite.position.x, sprite.position.y, 'sawmill');
             structure.anchor.setTo(0, 0);
             structure.type = 'structure';
             structure.num = 2;
@@ -893,7 +893,6 @@ window.onload = function () {
             lumberjack.num = 1;
             uiGroup.replace(sprite, lumberjack);
             lumberjack.inputEnabled = true;
-																																																																   
             lumberjack.events.onInputDown.add(function() {
                     if (game.resources.lumber >= 10 &&
                         game.resources.food >= 10 &&
@@ -926,7 +925,6 @@ window.onload = function () {
             woodsman.num = 2;
             uiGroup.replace(sprite, woodsman);
             woodsman.inputEnabled = true;
-																																																											  
             woodsman.events.onInputDown.add(function() {
                     if (game.resources.lumber >= 10 &&
                         game.resources.food >= 10 &&
@@ -947,9 +945,6 @@ window.onload = function () {
                         else
                             spawnY = selectedStructure.position.y + 2*TILE_LENGTH;
                         spawnPlayerUnit(spawnX, spawnY, 'woodsman');
-								 
-									 
-						 
                     }
             }, this);
                 }
@@ -985,7 +980,7 @@ window.onload = function () {
             );
                 }
                 else if (sprite.num == 2) {
-            var structure = game.add.sprite(sprite.position.x, sprite.position.y, 'structure');
+            var structure = game.add.sprite(sprite.position.x, sprite.position.y, 'sawmill');
             structure.anchor.setTo(0, 0);
             structure.type = 'structure';
             structure.num = 2;
@@ -1047,7 +1042,7 @@ window.onload = function () {
         else if (playerUnitX - 2 * TILE_LENGTH > 0) {
             spawnPlayerUnit(playerUnitX - 2 * TILE_LENGTH, playerUnitY, 'woodsman');
         }
-        else if (playerUnitX + 2 * TILE_LENGTH > WORLD_WIDTH) {
+        else if (playerUnitX + 2 * TILE_LENGTH < WORLD_WIDTH) {
             spawnPlayerUnit(playerUnitX + 2 * TILE_LENGTH, playerUnitY, 'woodsman');
         }
         spawnEnemyUnit(computerUnitX, computerUnitY, 'bear');

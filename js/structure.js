@@ -15,8 +15,9 @@ function Structure(game) {
 var Structures = {
 
         TILE_LENGTH: 64,
+        UI_HEIGHT: 144,
         DISTANCE_LIMIT: 96,
-	HIT_POINTS: 5000,
+	HIT_POINTS: 10000,
 	HIT_DEDUCTION: 5,
 	/**
 	* may be used after tile map is loaded
@@ -36,20 +37,6 @@ var Structures = {
 
 		//GameUtilities.randomReplaceTilesWithKey(mapGroup, "grass", "sawmill", 1.2, 0); // tile map version
 		//GameUtilities.randomReplaceTilesWithKey(mapGroup, "grass", "dam", 1.2, 1); // tile map version
-/*
-		for ( var i = 0; i < 10; i++ ) {
-			var coords = coordsGenerator.getCoords(1);
-			var x = coords[0];
-			var y = coords[1];
-	
-			playerStructure = game.add.sprite(x, y, 'sawmill');
-			playerStructure.anchor.setTo(0, 0);
-			playerGroup.add(playerStructure);
-			playerStructure.inputEnabled = true;
-			game.physics.arcade.enable(playerStructure);
-			playerStructure.HP = 10000;
-		}
-*/	
 
 		for ( var i = 0; i < spriteCount; i++ ) {
 			var coords = coordsGenerator.getCoords(mapArea);
@@ -57,22 +44,15 @@ var Structures = {
 			var y = coords[1];
 			var structure = group.create(x, y, key);
 			structure.Name = "Structure" + i;
-			//structure.HP = 1000000;
 			structure.anchor.setTo(0, 0);
 			group.add(structure);
 			structure.inputEnabled = true;
-      		game.physics.arcade.enable(structure);
-			structure.HP = 10000;
+      			game.physics.arcade.enable(structure);
+			structure.HP = Structures.HIT_POINTS;
 			structure.combat = false;
-
 		}
-
-
-
 	},
 
-	// TODO: make grass tiles double-clickable for (pop-up?) choice of structure
-	// TODO: replace grass tile with chosen structure
 	/*
 	borrowed from: http://www.andy-howard.com/how-to-double-click-in-phaser/index.html on 7/12/17
 
@@ -115,114 +95,93 @@ var Structures = {
 		game)
 	{
 
-	    selectedStructure.inputEnabled = true;
-	    selectedStructure.input.enableDrag();
-	    selectedStructure.events.onDragStart.add(onDragStart, this);
-	    selectedStructure.events.onDragStop.add(onDragStop, this);
+		selectedStructure.inputEnabled = true;
+		selectedStructure.input.enableDrag();
+		selectedStructure.events.onDragStart.add(onDragStart, this);
+		selectedStructure.events.onDragStop.add(onDragStop, this);
 
 		var originX = selectedStructure.position.x;
 		var originY = selectedStructure.position.y;
 
 		function onDragStart(sprite, pointer) {
-
-			//sprite.body.enable = true;
-		    game.physics.arcade.enable(sprite);
-
+			game.physics.arcade.enable(sprite);
 		}
 
 		function onDragStop(sprite, pointer) {
                         var nearbyUnit = false;
                         playerUnits.forEach(function (s) {
-                            var dist = Phaser.Math.distance(s.x, s.y, game.camera.x+sprite.x, game.camera.y+sprite.y); 
-                            if (dist < this.DISTANCE_LIMIT)
-                                nearbyUnit = true;
-                        }, this);
-		    if (!game.physics.arcade.overlap(selectedStructure, playerStructureGroup) &&
+				var dist = Phaser.Math.distance(s.x, s.y, game.camera.x+sprite.x, game.camera.y+sprite.y); 
+				if (dist < this.DISTANCE_LIMIT)
+					nearbyUnit = true;
+			}, this);
+			var onMap = false;
+			if (sprite.x > 0 &&
+			    sprite.x < game.width - this.TILE_LENGTH &&
+			    sprite.y > 0 &&
+			    sprite.y < game.height - this.UI_HEIGHT - this.TILE_LENGTH)
+				onMap = true;
+			if (!game.physics.arcade.overlap(selectedStructure, playerStructureGroup) &&
 		    	!game.physics.arcade.overlap(selectedStructure, enemyStructureGroup) &&
 		    	!game.physics.arcade.overlap(selectedStructure, mapGroup) &&
 		    	!game.physics.arcade.overlap(selectedStructure, playerUnits) &&
 		    	!game.physics.arcade.overlap(selectedStructure, computerUnits) &&
-           nearbyUnit) 
-		    // the structure will stay on the map, 
-		    // resource points get deducted, and replacement sprite will pop up in the ui at the bottom.
-		    {
-		        sprite.input.disableDrag();
-		        sprite.sendToBack();  // We want this for the game map, I think - if it's not sending behind everything and then not visible
+			nearbyUnit && onMap && game.resources.lumber >= 50)
+			// the structure will stay on the map, 
+			// resource points get deducted, and replacement sprite will pop up in the ui at the bottom.
+			{
+				sprite.input.disableDrag();
+				sprite.sendToBack();  // We want this for the game map, I think - if it's not sending behind everything and then not visible
 
-            selectedStructure.tint = 0x00FFFF;
-            selectedStructure.HP = 10000;
-            selectedStructure.combat = false;
-            game.time.events.add(30000, function() {
-                selectedStructure.tint = 0xFFFFFF;
-            }, this);
+				selectedStructure.tint = 0x00FFFF;
+				selectedStructure.HP = 10000;
+				selectedStructure.combat = false;
+
+				game.time.events.add(30000, function() {
+					selectedStructure.tint = 0xFFFFFF;
+				}, this);
           
-		        // need to compensate for any camera displacement
-		        sprite.position.x += sprite.game.camera.x;
-		        sprite.position.y += sprite.game.camera.y;
+		        	// need to compensate for any camera displacement
+				sprite.position.x += sprite.game.camera.x;
+				sprite.position.y += sprite.game.camera.y;
 
+				game.resources.lumber -= 50;
 
-		        game.resources.lumber -= 50;
-		        // replace resource tile
-		        replacementSprite = game.add.sprite(originX, originY, sprite.key);
-	            replacementSprite.anchor.setTo(0, 0);
+				// replace resource tile
+				replacementSprite = game.add.sprite(originX, originY, sprite.key);
+				replacementSprite.anchor.setTo(0, 0);
+				replacementSprite.type = 'structure';
+				replacementSprite.num = selectedStructure.num;
+				replacementSprite.HP = Structures.HIT_POINTS;
 
-                    replacementSprite.type = 'structure';
-                    replacementSprite.num = selectedStructure.num;
-                    uiGroup.remove(selectedStructure);
-		    playerStructureGroup.add(selectedStructure);
-	            replacementSprite.HP = Structures.HIT_POINTS;
-	            uiGroup.add(replacementSprite);
-	            this.enableStructureCreation(
+				uiGroup.remove(selectedStructure);
+				playerStructureGroup.add(selectedStructure);
+				uiGroup.add(replacementSprite);
+
+				this.enableStructureCreation(
 					uiGroup,
 					replacementSprite, 
 					playerStructureGroup, 
 					enemyStructureGroup,
 					mapGroup, // trees and berry bushes
 					resourcePoints,
-                    playerUnits,
-                    computerUnits,
-                    unitCount,
+					playerUnits,
+					computerUnits,
+					unitCount,
 					game
 				);
-		    }
-		    else
-		        // end up back in the ui at the bottom (not get placed on map)
-		    {
-		        sprite.position.x = originX;
-		        sprite.position.y = originY;
-		        //sprite.body.enable = false;
-		    }
-
+			}
+			else
+			// end up back in the ui at the bottom (not get placed on map)
+			{
+				sprite.position.x = originX;
+				sprite.position.y = originY;
+			}
 		}
-
 	},
 
 	// This should be called from the update function of the main game file.
 
 	update: function(game, addingStructureGroup, otherGroups){
-
-	    // test collision with object
-	    /*
-	    var overlappingStructure;
-//			console.log(game);
-		var overlapping = false;
-
-		for (var i = 0; i < otherGroups.length; i++){
-			for (var j = 0; j < addingStructureGroup.length; j++){
-				game.physics.arcade.overlap( addingStructureGroup.children[j], otherGroups[i], overlapCallback );
-			}
-			if ( (! overlapping) ) {
-				overlappingStructure.tint = 0xFFFFFF; // removes any tint
-			}
-		}
-
-		function overlapCallback(draggedStructure, mapStructure){
-		    draggedStructure.tint = 0xFF0000; // red tint
-		    overlappingStructure = draggedStructure;
-		    overlapping = true;
-		}
-		*/
-		
 	    for (var i = 0; i < addingStructureGroup.length; i++){
 	    	addingStructure = addingStructureGroup.children[i];
 	    	if ( ! game.physics.arcade.overlap(addingStructure, otherGroups[0], overlapCallback) &&
@@ -239,7 +198,13 @@ var Structures = {
                             if (dist < this.DISTANCE_LIMIT)
                                 nearbyUnit = true;
                         }, this);
-                if (!nearbyUnit)
+                        var onMap = false;
+                        if (addingStructure.x > 0 &&
+                            addingStructure.x < game.width - this.TILE_LENGTH &&
+                            addingStructure.y > 0 &&
+                            addingStructure.y < game.height - this.UI_HEIGHT - this.TILE_LENGTH)
+                            onMap = true;
+                if (!nearbyUnit || !onMap || game.resources.lumber < 50)
 	            addingStructure.tint = 0xFF0000;
             }
 		    }
