@@ -14,10 +14,10 @@ function Structure(game) {
 /* Performs various operations related to structures */
 var Structures = {
 
-        TILE_LENGTH: 64,
-        UI_HEIGHT: 144,
-        DISTANCE_LIMIT: 96,
-	HIT_POINTS: 10000,
+    TILE_LENGTH: 64,
+    UI_HEIGHT: 144,
+    DISTANCE_LIMIT: 96,
+    HIT_POINTS: 10000,
 	HIT_DEDUCTION: 5,
 	/**
 	* may be used after tile map is loaded
@@ -49,6 +49,8 @@ var Structures = {
 			structure.inputEnabled = true;
       			game.physics.arcade.enable(structure);
 			structure.HP = Structures.HIT_POINTS;
+            structure.Attack = 15;
+            structure.Defense = 20;
 			structure.combat = false;
 		}
 	},
@@ -133,7 +135,9 @@ var Structures = {
 				sprite.sendToBack();  // We want this for the game map, I think - if it's not sending behind everything and then not visible
 
 				selectedStructure.tint = 0x00FFFF;
-				selectedStructure.HP = 10000;
+				selectedStructure.HP = Structures.HIT_POINTS;
+                selectedStructure.Attack = 15;
+                selectedStructure.Defense = 20;
 				selectedStructure.combat = false;
 
 				game.time.events.add(30000, function() {
@@ -151,7 +155,6 @@ var Structures = {
 				replacementSprite.anchor.setTo(0, 0);
 				replacementSprite.type = 'structure';
 				replacementSprite.num = selectedStructure.num;
-				replacementSprite.HP = Structures.HIT_POINTS;
 
 				uiGroup.remove(selectedStructure);
 				playerStructureGroup.add(selectedStructure);
@@ -225,14 +228,14 @@ var Structures = {
 
 	/* Called in update to damage the structure.
 		When structure.HP reaches 0, the structure will be destroyed. */
-	damage: function(game, structure){
+	damage: function(game, structure, player){
 		
 		if (!structure.HP) {
 			structure.HP = this.HIT_POINTS;
 		}
 
 		if (structure.HP && structure.HP > 0){
-			structure.HP -= 5;
+			structure.HP -= Math.max(0,(player.Attack - structure.Defense));
 		}
 
 		if ( (structure.HP < this.HIT_POINTS / 2) && (structure.halfDamaged == undefined) ) {
