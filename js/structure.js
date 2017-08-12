@@ -140,7 +140,8 @@ var Structures = {
 		    	!game.physics.arcade.overlap(selectedStructure, mapGroup) &&
 		    	!game.physics.arcade.overlap(selectedStructure, playerUnits) &&
 		    	!game.physics.arcade.overlap(selectedStructure, computerUnits) &&
-           nearbyUnit) 
+		    	game.resources.lumber >= 50 &&
+        		nearbyUnit) 
 		    // the structure will stay on the map, 
 		    // resource points get deducted, and replacement sprite will pop up in the ui at the bottom.
 		    {
@@ -326,6 +327,7 @@ var Structures = {
 		var closestTree = mapGroup.getClosestTo(damBuilder, function(resource){
 			return resource.key == "tree" && !resource.markedForDam;
 		});
+		if(closestTree == null) return;
 		closestTree.markedForDam = true;
 		damBuilder.tree = closestTree;
 		closestTree.tint = 0x0000FF; // TODO: remove - just for debugging purposes
