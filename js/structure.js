@@ -17,7 +17,7 @@ var Structures = {
     TILE_LENGTH: 64,
     UI_HEIGHT: 144,
     DISTANCE_LIMIT: 96,
-    HIT_POINTS: 10000,
+    HIT_POINTS: 20000,
 	HIT_DEDUCTION: 5,
 	/**
 	* may be used after tile map is loaded

@@ -371,10 +371,20 @@ window.onload = function () {
                 if (selectedStructure.tint != 0x00FFFF) {
                     playerStructureGroup.children[i].tint = 0xFFDF00;
                     selectedUnit = [];
-                }											 
+                }
+                							 
             }
             else if (playerStructureGroup.children[i].tint == 0xFFDF00)
                 playerStructureGroup.children[i].tint = 0xFFFFFF;
+        }
+        for (i = 0; i < enemyStructureGroup.children.length; i++) {
+            if (Phaser.Rectangle.contains(enemyStructureGroup.children[i].body, this.game.input.activePointer.x + game.camera.x, this.game.input.activePointer.y + game.camera.y)) {
+                selectedStructure = enemyStructureGroup.children[i];
+                enemyStructureGroup.children[i].tint = 0xFFDF00;
+                selectedUnit = [];
+            }
+            else if (enemyStructureGroup.children[i].tint == 0xFFDF00)
+                enemyStructureGroup.children[i].tint = 0xFFFFFF;
         }
       }
     }
@@ -847,6 +857,7 @@ window.onload = function () {
             uiSelectedUnit.loadTexture(selectedStructure.key, 0, false);
             if (selectionChange) {
             selectionChange = false;
+            if (selectedStructure.key == 'sawmill') {
             uiGroup.forEach(function(sprite) {
               if (sprite.type == 'structure') {
                 if (sprite.num == 1) {
@@ -916,6 +927,7 @@ window.onload = function () {
               }
             });
             }
+          }
         }
         else {
             uiUnitText.setText("");
@@ -1114,7 +1126,7 @@ window.onload = function () {
             if (DIFFICULTY)
                 game.time.events.add(5000, spawnUnitAI, this);
             else
-                game.time.events.add(10000, spawnUnitAI, this);
+                game.time.events.add(9000, spawnUnitAI, this);
         }
     }
 
@@ -1138,8 +1150,12 @@ window.onload = function () {
         xOffsetGlobal = 2*TILE_LENGTH;
         yOffsetGlobal = 2*TILE_LENGTH;
         var target = playerUnits.getClosestTo(compStruct1);
-        var dist = Phaser.Math.distance(target.x, target.y, compStruct1.x,
+        var dist;
+        if (target != null)
+            dist = Phaser.Math.distance(target.x, target.y, compStruct1.x,
                                         compStruct1.y);
+        else
+            dist = 99999;
         var defenseNum;
         if (DIFFICULTY)
             defenseNum = compDefenseUnits.length/2;
