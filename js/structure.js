@@ -14,9 +14,10 @@ function Structure(game) {
 /* Performs various operations related to structures */
 var Structures = {
 
-        TILE_LENGTH: 64,
-        DISTANCE_LIMIT: 96,
-	HIT_POINTS: 5000,
+    TILE_LENGTH: 64,
+    UI_HEIGHT: 144,
+    DISTANCE_LIMIT: 96,
+    HIT_POINTS: 20000,
 	HIT_DEDUCTION: 5,
 	/**
 	* may be used after tile map is loaded
@@ -36,20 +37,6 @@ var Structures = {
 
 		//GameUtilities.randomReplaceTilesWithKey(mapGroup, "grass", "sawmill", 1.2, 0); // tile map version
 		//GameUtilities.randomReplaceTilesWithKey(mapGroup, "grass", "dam", 1.2, 1); // tile map version
-/*
-		for ( var i = 0; i < 10; i++ ) {
-			var coords = coordsGenerator.getCoords(1);
-			var x = coords[0];
-			var y = coords[1];
-	
-			playerStructure = game.add.sprite(x, y, 'sawmill');
-			playerStructure.anchor.setTo(0, 0);
-			playerGroup.add(playerStructure);
-			playerStructure.inputEnabled = true;
-			game.physics.arcade.enable(playerStructure);
-			playerStructure.HP = 10000;
-		}
-*/	
 
 		for ( var i = 0; i < spriteCount; i++ ) {
 			var coords = coordsGenerator.getCoords(mapArea);
@@ -57,18 +44,15 @@ var Structures = {
 			var y = coords[1];
 			var structure = group.create(x, y, key);
 			structure.Name = "Structure" + i;
-			//structure.HP = 1000000;
 			structure.anchor.setTo(0, 0);
 			group.add(structure);
 			structure.inputEnabled = true;
-      		game.physics.arcade.enable(structure);
-			structure.HP = 10000;
+      			game.physics.arcade.enable(structure);
+			structure.HP = Structures.HIT_POINTS;
+            structure.Attack = 15;
+            structure.Defense = 20;
 			structure.combat = false;
-
 		}
-
-
-
 	},
 
 	/*
@@ -113,115 +97,94 @@ var Structures = {
 		game)
 	{
 
-	    selectedStructure.inputEnabled = true;
-	    selectedStructure.input.enableDrag();
-	    selectedStructure.events.onDragStart.add(onDragStart, this);
-	    selectedStructure.events.onDragStop.add(onDragStop, this);
+		selectedStructure.inputEnabled = true;
+		selectedStructure.input.enableDrag();
+		selectedStructure.events.onDragStart.add(onDragStart, this);
+		selectedStructure.events.onDragStop.add(onDragStop, this);
 
 		var originX = selectedStructure.position.x;
 		var originY = selectedStructure.position.y;
 
 		function onDragStart(sprite, pointer) {
-
-			//sprite.body.enable = true;
-		    game.physics.arcade.enable(sprite);
-
+			game.physics.arcade.enable(sprite);
 		}
 
 		function onDragStop(sprite, pointer) {
                         var nearbyUnit = false;
                         playerUnits.forEach(function (s) {
-                            var dist = Phaser.Math.distance(s.x, s.y, game.camera.x+sprite.x, game.camera.y+sprite.y); 
-                            if (dist < this.DISTANCE_LIMIT)
-                                nearbyUnit = true;
-                        }, this);
-		    if (!game.physics.arcade.overlap(selectedStructure, playerStructureGroup) &&
+				var dist = Phaser.Math.distance(s.x, s.y, game.camera.x+sprite.x, game.camera.y+sprite.y); 
+				if (dist < this.DISTANCE_LIMIT)
+					nearbyUnit = true;
+			}, this);
+			var onMap = false;
+			if (sprite.x > 0 &&
+			    sprite.x < game.width - this.TILE_LENGTH &&
+			    sprite.y > 0 &&
+			    sprite.y < game.height - this.UI_HEIGHT - this.TILE_LENGTH)
+				onMap = true;
+			if (!game.physics.arcade.overlap(selectedStructure, playerStructureGroup) &&
 		    	!game.physics.arcade.overlap(selectedStructure, enemyStructureGroup) &&
 		    	!game.physics.arcade.overlap(selectedStructure, mapGroup) &&
 		    	!game.physics.arcade.overlap(selectedStructure, playerUnits) &&
 		    	!game.physics.arcade.overlap(selectedStructure, computerUnits) &&
-		    	game.resources.lumber >= 50 &&
-        		nearbyUnit) 
+        		nearbyUnit && onMap && game.resources.lumber >= 50) 
 		    // the structure will stay on the map, 
 		    // resource points get deducted, and replacement sprite will pop up in the ui at the bottom.
 		    {
 		        sprite.input.disableDrag();
 		        sprite.sendToBack();  // We want this for the game map, I think - if it's not sending behind everything and then not visible
 
-            selectedStructure.tint = 0x00FFFF;
-            selectedStructure.HP = 10000;
-            selectedStructure.combat = false;
-            game.time.events.add(30000, function() {
-                selectedStructure.tint = 0xFFFFFF;
-            }, this);
+	            selectedStructure.tint = 0x00FFFF;
+	            selectedStructure.HP = Structures.HIT_POINTS;
+	            selectedStructure.Attack = 15;
+	            selectedStructure.Defense = 20;
+	            selectedStructure.combat = false;
+	            
+	            game.time.events.add(30000, function() {
+	                selectedStructure.tint = 0xFFFFFF;
+	            }, this);
           
 		        // need to compensate for any camera displacement
-		        sprite.position.x += sprite.game.camera.x;
-		        sprite.position.y += sprite.game.camera.y;
+				sprite.position.x += sprite.game.camera.x;
+				sprite.position.y += sprite.game.camera.y;
 
+				game.resources.lumber -= 50;
 
-		        game.resources.lumber -= 50;
-		        // replace resource tile
-		        replacementSprite = game.add.sprite(originX, originY, sprite.key);
-	            replacementSprite.anchor.setTo(0, 0);
+				// replace resource tile
+				replacementSprite = game.add.sprite(originX, originY, sprite.key);
+				replacementSprite.anchor.setTo(0, 0);
+				replacementSprite.type = 'structure';
+				replacementSprite.num = selectedStructure.num;
 
-                    replacementSprite.type = 'structure';
-                    replacementSprite.num = selectedStructure.num;
-                    uiGroup.remove(selectedStructure);
-		    playerStructureGroup.add(selectedStructure);
-	            replacementSprite.HP = Structures.HIT_POINTS;
-	            uiGroup.add(replacementSprite);
-	            this.enableStructureCreation(
+				uiGroup.remove(selectedStructure);
+				playerStructureGroup.add(selectedStructure);
+				uiGroup.add(replacementSprite);
+
+				this.enableStructureCreation(
 					uiGroup,
 					replacementSprite, 
 					playerStructureGroup, 
 					enemyStructureGroup,
 					mapGroup, // trees and berry bushes
 					resourcePoints,
-                    playerUnits,
-                    computerUnits,
-                    unitCount,
+					playerUnits,
+					computerUnits,
+					unitCount,
 					game
 				);
-		    }
-		    else
-		        // end up back in the ui at the bottom (not get placed on map)
-		    {
-		        sprite.position.x = originX;
-		        sprite.position.y = originY;
-		        //sprite.body.enable = false;
-		    }
-
+			}
+			else
+			// end up back in the ui at the bottom (not get placed on map)
+			{
+				sprite.position.x = originX;
+				sprite.position.y = originY;
+			}
 		}
-
 	},
 
 	// This should be called from the update function of the main game file.
 
 	update: function(game, addingStructureGroup, otherGroups){
-
-	    // test collision with object
-	    /*
-	    var overlappingStructure;
-//			console.log(game);
-		var overlapping = false;
-
-		for (var i = 0; i < otherGroups.length; i++){
-			for (var j = 0; j < addingStructureGroup.length; j++){
-				game.physics.arcade.overlap( addingStructureGroup.children[j], otherGroups[i], overlapCallback );
-			}
-			if ( (! overlapping) ) {
-				overlappingStructure.tint = 0xFFFFFF; // removes any tint
-			}
-		}
-
-		function overlapCallback(draggedStructure, mapStructure){
-		    draggedStructure.tint = 0xFF0000; // red tint
-		    overlappingStructure = draggedStructure;
-		    overlapping = true;
-		}
-		*/
-		
 	    for (var i = 0; i < addingStructureGroup.length; i++){
 	    	addingStructure = addingStructureGroup.children[i];
 	    	if ( ! game.physics.arcade.overlap(addingStructure, otherGroups[0], overlapCallback) &&
@@ -238,7 +201,13 @@ var Structures = {
                             if (dist < this.DISTANCE_LIMIT)
                                 nearbyUnit = true;
                         }, this);
-                if (!nearbyUnit)
+                        var onMap = false;
+                        if (addingStructure.x > 0 &&
+                            addingStructure.x < game.width - this.TILE_LENGTH &&
+                            addingStructure.y > 0 &&
+                            addingStructure.y < game.height - this.UI_HEIGHT - this.TILE_LENGTH)
+                            onMap = true;
+                if (!nearbyUnit || !onMap || game.resources.lumber < 50)
 	            addingStructure.tint = 0xFF0000;
             }
 		    }
@@ -259,14 +228,14 @@ var Structures = {
 
 	/* Called in update to damage the structure.
 		When structure.HP reaches 0, the structure will be destroyed. */
-	damage: function(game, structure){
+	damage: function(game, structure, player){
 		
 		if (!structure.HP) {
 			structure.HP = this.HIT_POINTS;
 		}
 
 		if (structure.HP && structure.HP > 0){
-			structure.HP -= 5;
+			structure.HP -= Math.max(0,(player.Attack - structure.Defense));
 		}
 
 		if ( (structure.HP < this.HIT_POINTS / 2) && (structure.halfDamaged == undefined) ) {
@@ -330,10 +299,10 @@ var Structures = {
 		if(closestTree == null) return;
 		closestTree.markedForDam = true;
 		damBuilder.tree = closestTree;
-		closestTree.tint = 0x0000FF; // TODO: remove - just for debugging purposes
+		//closestTree.tint = 0x0000FF; // TODO: remove - just for debugging purposes
 		moveCompUnit(damBuilder, closestTree.body.position.x, closestTree.body.position.y);
 		//game.physics.arcade.moveToObject(damBuilder, closestTree, velocity);
-		damBuilder.tint = 0xFF0000; // TODO: remove tint - just for debugging purposes
+		//damBuilder.tint = 0xFF0000; // TODO: remove tint - just for debugging purposes
 	},
 
 	addEnemyStructure: function(game, tree, enemyStructureGroup){
@@ -351,83 +320,9 @@ var Structures = {
 			var dam = enemyStructureGroup.create(x, y, "dam");
 			game.physics.arcade.enable(dam);
 			dam.HP = this.HIT_POINTS;
+			dam.Defense = 2;
 		}, this);
 		
-
-		// attach new ai functions to this dam (eg: spawning a few ai with separate roles)
-		// TODO: also work on structure depletion
-
-		// 100 attempts to find random coordinates in right half of the game map
-		// 100 attempts to find random coordinates in left half of the game map
-		// if structure still cannot be placed without overlapping a game object,
-		//   destroy whatever is in its way.
-		// finally, deduct 10 point of enemy lumber and food
-		// this function assumes that the enemy has at least 10 points of enemy lumber and 
-		// 10 points of enemy food
-
-
-/*		
-		var attempts = 0;
-		var structureNotPlaced = true;
-		//var x = (Math.random() * game.world.width / 2) + (game.world.width / 2);  // right half
-		//var y = Math.random() * game.world.height - 40;
-		//var x = Math.random() * game.world.width;
-		//var y = Math.random() * game.world.height;
-		var newStructure = game.add.sprite(x, y, "dam");
-		//newStructure.enableBody = true;
-		game.physics.arcade.enable(newStructure);
-
-		while (structureNotPlaced && attempts < 100){
-			if (game.physics.arcade.overlap(newStructure, game.world)){
-				// continue to find new coordinates
-				newStructure.position.x = (Math.random() * game.world.width / 2) + (game.world.width / 2);  // right half
-				newStructure.position.y = Math.random() * game.world.height - 40;
-			} else {
-				structureNotPlaced = false;
-				newStructure.tint = 0xFFFF00;
-			}
-			attempts++;
-		}
-
-
-		if (attempts >= 100 && structureNotPlaced){
-			// try placing structure in left side of map
-			attempts = 0;
-			while (structureNotPlaced && attempts < 1000){
-				if (game.physics.arcade.overlap(newStructure, game.world)){
-					// continue to find new coordinates
-					newStructure.position.x = Math.random() * game.world.width / 2;  // left half
-					newStructure.position.y = Math.random() * game.world.height - 40;
-				} else {
-					structureNotPlaced = false;
-				}
-				attempts++;
-			}
-		}
-
-
-		attempts = 0;
-		// structure still not placed? ...destroy whatever is in its way!
-		while (structureNotPlaced && 
-			game.physics.arcade.overlap(newStructure, game.world, destroyObj, null, this) &&
-			attempts < 1000){
-				attempts++;
-		}		
-
-		//game.physics.arcade.overlap(newStructure, game.world, destroyObj, null, this);
-		function destroyObj(newStruct, obj){
-			//obj.tint = 0x0000FF; // can never see these blue objects, so I think that's good
-			if ( obj.key != "dam" )
-				obj.destroy();
-			//newStruct.tint = 0xFF0000; //TODO: why are they all red on the right side ????
-			newStruct.tint = 0x0000FF;
-			structureNotPlaced = false;
-
-		}
-*/
-		// deduct points
-		//enemyResources.enemyLumber -= 10;
-		//enemyResources.enemyFood -= 10;
 	},
 
 
