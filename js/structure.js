@@ -229,7 +229,6 @@ var Structures = {
 	/* Called in update to damage the structure.
 		When structure.HP reaches 0, the structure will be destroyed. */
 	damage: function(game, structure, player){
-		
 		if (!structure.HP) {
 			structure.HP = this.HIT_POINTS;
 		}
