@@ -55,6 +55,9 @@ window.onload = function () {
     var resources = { lumber: STARTINGLUMBER, food: STARTINGFOOD };
     var gameOver;
     var bgm;
+    var combatSFX;
+    var gatherBerry;
+    var gatherWood;
     var selectedUnit = [];
     var selectedStructure;
     var playerUnitCount = 0;
@@ -157,6 +160,9 @@ window.onload = function () {
         rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
         gameOver = false;
         game.sound.setDecodedCallback([bgm], start, this);
+        combatSFX = game.add.audio('combatSFX');
+        gatherBerry = game.add.audio('gatherBerry');
+        gatherWood = game.add.audio('gatherWood');
         game.input.
         currStructCount = 1;
         spawnFlag = true;
@@ -168,7 +174,7 @@ window.onload = function () {
     }
 
     function start() {
-        bgm.loopFull(0.6);
+        bgm.loopFull(0.2);
     }
 
     function update() {
@@ -337,6 +343,7 @@ window.onload = function () {
             game.time.events.add(5000, function () {
                 if (resource.type == 'tree') {
                     if (unit.lumber == 0) {
+                        gatherWood.play(null, null, .3);
                         unit.lumber = RESOURCE_PER_GATHER;
                         resource.count -= RESOURCE_PER_GATHER;
                         if (resource.count <= 0)
@@ -345,6 +352,7 @@ window.onload = function () {
                 }
                 else {
                     if (unit.food == 0) {
+                        gatherBerry.play(null, null, .3);
                         unit.food = RESOURCE_PER_GATHER;
                         resource.count -= RESOURCE_PER_GATHER;
                         if (resource.count <= 0)
@@ -554,6 +562,7 @@ window.onload = function () {
     }
 
     function unitCombat(player, enemy) {
+        combatSFX.play(null, null, .3);
         if (enemy.key == 'beaver' && enemy.x > player.x)
             enemy.loadTexture('beaver-left');
         else if (enemy.key == 'beaver-left' && enemy.x < player.x)
@@ -620,6 +629,7 @@ window.onload = function () {
     }
 
     function structureDamage(player, structure){
+        combatSFX.play(null, null, .3);
         Structures.damage(game, structure, player)
     }
 
@@ -635,17 +645,17 @@ window.onload = function () {
         if (game.input.activePointer.isUp) {
             x = game.input.activePointer.position.x;
             y = game.input.activePointer.position.y;
-            if (x > CAMERA_WIDTH - TILE_LENGTH) {
+            if (x > CAMERA_WIDTH - TILE_LENGTH || rightKey.isDown) {
                 game.camera.x += 10;
             }
-            else if (x < TILE_LENGTH) {
+            else if (x < TILE_LENGTH || leftKey.isDown) {
                 game.camera.x -= 10;
             }
 
-            if (y > CAMERA_HEIGHT - TILE_LENGTH / 4) {
+            if (y > CAMERA_HEIGHT - TILE_LENGTH / 4 || downKey.isDown) {
                 game.camera.y += 10;
             }
-            else if (y < TILE_LENGTH) {
+            else if (y < TILE_LENGTH || upKey.isDown) {
                 game.camera.y -= 10;
             }
         }
@@ -689,7 +699,9 @@ window.onload = function () {
 
     function loadSounds() {
         game.load.audio('bgm', 'assets/audio/Blob-Monsters-Return.mp3');
-        game.sound.setDecodedCallback([bgm], create, this);
+        game.load.audio('combatSFX', 'assets/audio/combat.mp3');
+        game.load.audio('gatherBerry', 'assets/audio/gatherberry.mp3');
+        game.load.audio('gatherWood', 'assets/audio/gatherwood.mp3');
     }
 
     function loadMap() {						  
@@ -1033,7 +1045,7 @@ window.onload = function () {
         else if (playerUnitX + 2 * TILE_LENGTH < WORLD_WIDTH) {
             spawnPlayerUnit(playerUnitX + 2 * TILE_LENGTH, playerUnitY, 'woodsman');
         }
-        spawnEnemyUnit(computerUnitX, computerUnitY, 'bear');
+        //spawnEnemyUnit(computerUnitX, computerUnitY, 'bear');
         selectedUnit.push(playerUnits.children[0]);
     }
 
