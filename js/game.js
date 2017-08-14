@@ -1096,7 +1096,7 @@ window.onload = function () {
     }
 
     function collectResourceAI(unit, structureGroup) {
-        if ( !runInitialAI ) return;
+        //if ( !runInitialAI ) return;
 
         var closestResource;
         var nearestHome = structureGroup.getBottom();
@@ -1401,7 +1401,10 @@ window.onload = function () {
         } else if ( mapResource.key = "tree"  ){
             stopUnit(beaver, undefined);
             beaver.buildingDam = true;
-            Structures.addEnemyStructure(game, mapResource, enemyStructureGroup);
+            if (enemyLumber >= 50) {
+                Structures.addEnemyStructure(game, mapResource, enemyStructureGroup);
+                enemyLumber -= 50;
+            }
         }
     }
 
