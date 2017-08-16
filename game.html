@@ -1,11 +1,14 @@
 <!doctype html>
 
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
-        <script src="./js/gameUtilities.js"></script>
-        <script src="./js/structure.js"></script>
-        <script src="./js/game.js"></script>
+    <script src="./js/gameUtilities.js"></script>
+    <script src="./js/structure.js"></script>
+    <script src="./js/game.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <title>OSU CS 467 Team Grus RTS Game Page</title>
     <meta name="description" content="Lumberjacks versus Beavers game">
     <meta name="author" content="Ben, Steven, Joshua">
@@ -23,22 +26,65 @@
 <body>
     <div class="container">
         <div class="text-center">
-            <h1>Lumberjacks vs Beavers RTS Game</h1>
+            <h1>Lumberjacks vs Beavers RTS Game - <span id="mode"></span></h1>
         </div>
         <div class="row">
-        <div class="col-lg-4 button text-center" id="savegame">
-            <a id="savebutton" class="btn btn-group btn-success">Save Game
+            <div class="col-lg-4 button text-center" id="savegame">
+                <a id="savebutton" class="btn btn-group btn-success">Save Game
             </a>
-        </div>
-        <div class="col-lg-4 text-center align-center">
-            <h2 id="mode"></h2>
-        </div>
-        <div class="col-lg-4 button text-center">
-            <a id="quitbutton" class="btn btn-group btn-danger"
-               href="index.html">Quit Game
+            </div>
+            <div class="col-lg-4 button text-center">
+
+                <button type="button" class="btn btn-info btn-group" data-toggle="modal" data-target="#myModal">Instructions</button>
+            </div>
+            <div class="col-lg-4 button text-center">
+                <a id="quitbutton" class="btn btn-group btn-danger" href="index.html">Quit Game
             </a>
+            </div>
+
         </div>
+    </div>
+    </div>
+    <div id="myModal" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <!-- dialog body -->
+                <div class="modal-body">
+                    <ul>
+                        <li style="list-style:none;">
+                            <h1>How To Play</h1>
+                        </li>
+                        <li>
+                            Gather resources from trees and berry bushes to build new units. </li>
+                        <li>Select structures to build new units. </li>
+                        <li>Build new structures to gather resources and build new units.</li>
+                        <li>
+                            Move your units to enemy units and structures to attack them. </li>
+                        <li>
+                            Move your units to a friendly structure to slowly heal them. </li>
+                        <li>
+                            Destroy all enemy structures to win the game. </li>
+                    </ul>
+                    <ul>
+                        <li style="list-style:none;">
+                            <h1>Controls</h1>
+                        </li>
+                        <li>
+                            Arrow Keys - Move Camera
+                        </li>
+                        <li>
+                            Left Click - Select a unit or structure.</li>
+                        <li>
+                            Right Click - Move unit.</li>
+                        <li>
+                            Ctrl + Left Click - Use twice to select all unites between the two clicks</li>
+                        <li>
+                            Ctrl + Right Click - When a unit is selected Ctrl + Right Clicking a bush or tree will assign that unit to gather resources</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 </body>
+
 </html>
