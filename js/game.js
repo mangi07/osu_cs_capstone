@@ -776,7 +776,7 @@ window.onload = function () {
         var structureSprites = ["sawmill", "sawmill"];
         var x;
         var y = CAMERA_HEIGHT - UI_HEIGHT + TILE_LENGTH;
-        for (var i = 1; i <= structureSprites.length; i++) {
+        for (var i = 1; i < structureSprites.length; i++) {
             x = i * TILE_LENGTH + TILE_LENGTH / 2;
             uiSprite = game.add.sprite(x, y, structureSprites[i-1]);
             uiSprite.anchor.setTo(0, 0);
