@@ -87,6 +87,16 @@
             </div>
         </div>
     </div>
+
+    <script>
+        var jsonTest = localStorage.getItem('lumberjacksvsbeaverssave');
+        // modified from https://stackoverflow.com/questions/6304453/javascript-append-html-to-container-element-without-innerhtml
+        if (jsonTest == undefined){
+            var loadbutton = document.getElementById('loadgame');
+            loadbutton.style.visibility = "hidden";
+            loadbutton.style.display = "none";
+        }
+    </script>
 </body>
 
 </html>

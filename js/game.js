@@ -1019,6 +1019,8 @@ window.onload = function () {
             gameOverText = game.add.text(game.camera.x + CAMERA_WIDTH / 2, game.camera.y + CAMERA_HEIGHT / 2, "GAME OVER - YOU " + resultString + "!");
             gameOverText.anchor.setTo(0.5, 0.5);
             gameOverText.fontSize = 60;
+
+            localStorage.removeItem('lumberjacksvsbeaverssave');
         }
     }
 
